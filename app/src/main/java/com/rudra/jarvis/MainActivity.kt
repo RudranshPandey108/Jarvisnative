@@ -185,7 +185,7 @@ normalized.contains("photo le lo") -> {
         normalized.contains("khol") ||
         normalized.contains("khol do") -> {
 
-            val appName = cmd
+            val appName = normalized
                 .replace("open", "")
                 .replace("khol do", "")
                 .replace("khol", "")
@@ -203,7 +203,7 @@ normalized.contains("photo le lo") -> {
 
                 normalized.contains("spotify") -> {
 
-                    val song = cmd
+                    val song = normalized
                         .replace("spotify", "")
                         .replace("play", "")
                         .replace("chalao", "")
@@ -215,7 +215,7 @@ normalized.contains("photo le lo") -> {
 
                 normalized.contains("youtube music") -> {
 
-                    val song = cmd
+                    val song = normalized
                         .replace("youtube music", "")
                         .replace("play", "")
                         .replace("chalao", "")
@@ -227,7 +227,7 @@ normalized.contains("photo le lo") -> {
 
                 else -> {
 
-                    val song = cmd
+                    val song = normalized
                         .replace("youtube", "")
                         .replace("play", "")
                         .replace("chalao", "")
