@@ -1,4 +1,7 @@
 package com.rudra.jarvis
+import java.net.URL
+import org.json.JSONObject
+import kotlin.concurrent.thread
 
 import android.Manifest
 import android.app.Activity
@@ -17,6 +20,7 @@ import androidx.core.content.ContextCompat
 import java.util.Locale
 
 class MainActivity : Activity(), TextToSpeech.OnInitListener {
+    private val YOUTUBE_API_KEY = "AIzaSyAE7-4GLJQNAk5vxhPBCrRxB4pa85eg6gE"
 
     private lateinit var statusText: TextView
     private lateinit var commandText: TextView
@@ -216,24 +220,78 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
     }
 
     private fun playOnYouTube(song: String) {
-        if (song.isBlank()) {
-            speak("Please say the song name")
-            return
-        }
 
-        statusText.text = "Opening YouTube: $song"
-        speak("Opening $song on YouTube")
+    if (song.isBlank()) {
+        speak("Please say the song name")
+        return
+    }
 
-        val url = "https://www.youtube.com/results?search_query=${Uri.encode(song)}"
-        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
-        intent.setPackage("com.google.android.youtube")
+    statusText.text = "Searching YouTube for $song"
+    speak("Playing $song on YouTube")
+
+    thread {
 
         try {
-            startActivity(intent)
+
+            val apiUrl =
+                "https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&maxResults=1&q=${
+                    Uri.encode(song)
+                }&key=$YOUTUBE_API_KEY"
+
+            val response = URL(apiUrl).readText()
+
+            val json = JSONObject(response)
+
+            val items = json.getJSONArray("items")
+
+            if (items.length() > 0) {
+
+                val videoId = items
+                    .getJSONObject(0)
+                    .getJSONObject("id")
+                    .getString("videoId")
+
+                runOnUiThread {
+
+                    val intent = Intent(
+                        Intent.ACTION_VIEW,
+                        Uri.parse("vnd.youtube:$videoId")
+                    )
+
+                    intent.setPackage("com.google.android.youtube")
+
+                    try {
+                        startActivity(intent)
+                    } catch (e: Exception) {
+
+                        val webUrl =
+                            "https://www.youtube.com/watch?v=$videoId"
+
+                        startActivity(
+                            Intent(
+                                Intent.ACTION_VIEW,
+                                Uri.parse(webUrl)
+                            )
+                        )
+                    }
+                }
+
+            } else {
+
+                runOnUiThread {
+                    speak("No video found")
+                }
+            }
+
         } catch (e: Exception) {
-            startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
+
+            runOnUiThread {
+                statusText.text = "YouTube API Error"
+                speak("Failed to fetch video")
+            }
         }
     }
+}
 
     private fun playOnYouTubeMusic(song: String) {
         if (song.isBlank()) {
