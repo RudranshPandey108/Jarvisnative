@@ -121,6 +121,21 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
             startVoiceInput()
         }
     }
+    private fun openCameraSelfie() {
+    statusText.text = "Opening selfie camera"
+    speak("Opening selfie camera")
+
+    val intent = Intent("android.media.action.IMAGE_CAPTURE")
+    intent.putExtra("android.intent.extras.CAMERA_FACING", 1)
+    intent.putExtra("android.intent.extras.LENS_FACING_FRONT", 1)
+    intent.putExtra("android.intent.extra.USE_FRONT_CAMERA", true)
+
+    try {
+        startActivity(intent)
+    } catch (e: Exception) {
+        speak("Camera could not be opened")
+    }
+    }
 
     private fun startVoiceInput() {
         statusText.text = "Listening..."
@@ -160,6 +175,13 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
     val cmd = command.lowercase()
 
     when {
+        cmd.contains("take selfie") ||
+cmd.contains("selfie lo") ||
+cmd.contains("selfie le lo") ||
+cmd.contains("photo lo") ||
+cmd.contains("photo le lo") -> {
+    openCameraSelfie()
+}
 
         cmd.startsWith("open ") ||
         cmd.contains("khol") ||
