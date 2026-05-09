@@ -161,21 +161,29 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
     }
 
     private fun handleCommand(command: String) {
+        val cmd = command.lowercase()
 
-    val cmd = command.lowercase()
+        val normalized = cmd
+    .replace("ओपन", "open")
+    .replace("व्हाट्सएप", "whatsapp")
+    .replace("यूट्यूब", "youtube")
+    .replace("स्पॉटिफाई", "spotify")
+    .replace("कैमरा", "camera")
+    .replace("सेटिंग", "settings")
 
+    
     when {
-        cmd.contains("take selfie") ||
-cmd.contains("selfie lo") ||
-cmd.contains("selfie le lo") ||
-cmd.contains("photo lo") ||
-cmd.contains("photo le lo") -> {
+        normalized.contains("take selfie") ||
+normalized.contains("selfie lo") ||
+normalized.contains("selfie le lo") ||
+normalized.contains("photo lo") ||
+normalized.contains("photo le lo") -> {
     openCameraSelfie()
 }
 
-        cmd.startsWith("open ") ||
-        cmd.contains("khol") ||
-        cmd.contains("khol do") -> {
+        normalized.startsWith("open ") ||
+        normalized.contains("khol") ||
+        normalized.contains("khol do") -> {
 
             val appName = cmd
                 .replace("open", "")
@@ -186,14 +194,14 @@ cmd.contains("photo le lo") -> {
             openApp(appName)
         }
 
-        cmd.contains("play") ||
-        cmd.contains("chalao") ||
-        cmd.contains("bajao") ||
-        cmd.contains("gana") -> {
+        normalized.contains("play") ||
+        normalized.contains("chalao") ||
+        normalized.contains("bajao") ||
+        normalized.contains("gana") -> {
 
             when {
 
-                cmd.contains("spotify") -> {
+                normalized.contains("spotify") -> {
 
                     val song = cmd
                         .replace("spotify", "")
@@ -205,7 +213,7 @@ cmd.contains("photo le lo") -> {
                     playOnSpotify(song)
                 }
 
-                cmd.contains("youtube music") -> {
+                normalized.contains("youtube music") -> {
 
                     val song = cmd
                         .replace("youtube music", "")
@@ -231,9 +239,9 @@ cmd.contains("photo le lo") -> {
             }
         }
 
-        cmd.contains("hello") ||
-        cmd.contains("hi") ||
-        cmd.contains("namaste") -> {
+        normalized.contains("hello") ||
+        normalized.contains("hi") ||
+        normalized.contains("namaste") -> {
 
             statusText.text = "Hello sir"
             speak("Hello sir")
