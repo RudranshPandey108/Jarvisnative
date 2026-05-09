@@ -2,6 +2,7 @@ package com.rudra.jarvis
 import java.net.URL
 import org.json.JSONObject
 import kotlin.concurrent.thread
+import android.content.pm.PackageManager
 
 import android.Manifest
 import android.app.Activity
@@ -29,29 +30,7 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
     private val speechRequestCode = 101
     private val micPermissionCode = 201
 
-    private val appPackages = mapOf(
-
-    "youtube" to "com.google.android.youtube",
-    "spotify" to "com.spotify.music",
-    "youtube music" to "com.google.android.apps.youtube.music",
-
-    "whatsapp" to "com.whatsapp",
-    "instagram" to "com.instagram.android",
-
-    "chrome" to "com.android.chrome",
-    "gmail" to "com.google.android.gm",
-
-    "maps" to "com.google.android.apps.maps",
-    "google maps" to "com.google.android.apps.maps",
-
-    "camera" to "com.android.camera",
-    "settings" to "com.android.settings",
-    "photos" to "com.google.android.apps.photos",
-    "gallery" to "com.miui.gallery",
-    "calculator" to "com.miui.calculator"
-
-)
-
+    
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -277,26 +256,45 @@ cmd.contains("photo le lo") -> {
     }
 
     private fun openApp(appName: String) {
-        val key = appPackages.keys.firstOrNull { appName.contains(it) }
 
-        if (key == null) {
-            statusText.text = "App not added yet: $appName"
-            speak("This app is not added yet")
-            return
-        }
+    val pm = packageManager
 
-        val packageName = appPackages[key]
-        val launchIntent = packageManager.getLaunchIntentForPackage(packageName!!)
+    val apps = pm.getInstalledApplications(PackageManager.GET_META_DATA)
 
-        if (launchIntent != null) {
-            statusText.text = "Opening $key"
-            speak("Opening $key")
-            startActivity(launchIntent)
-        } else {
-            statusText.text = "$key is not installed"
-            speak("$key is not installed")
+    var found = false
+
+    for (app in apps) {
+
+        val label = pm.getApplicationLabel(app)
+            .toString()
+            .lowercase()
+
+        if (label.contains(appName.lowercase())) {
+
+            val intent = pm.getLaunchIntentForPackage(app.packageName)
+
+            if (intent != null) {
+
+                found = true
+
+                statusText.text = "Opening $label"
+
+                speak("Opening $label")
+
+                startActivity(intent)
+
+                break
+            }
         }
     }
+
+    if (!found) {
+
+        statusText.text = "App not found"
+
+        speak("I could not find that app")
+    }
+}
 
     private fun playOnYouTube(song: String) {
 
