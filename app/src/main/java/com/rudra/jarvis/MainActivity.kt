@@ -2,6 +2,8 @@ package com.rudra.jarvis
 import java.net.URL
 import org.json.JSONObject
 import kotlin.concurrent.thread
+import android.graphics.drawable.GradientDrawable
+import android.view.View
 import android.content.SharedPreferences
 import android.text.InputType
 
@@ -35,93 +37,137 @@ private lateinit var geminiKeyInput: EditText
 
     
     override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
+    super.onCreate(savedInstanceState)
 
-        tts = TextToSpeech(this, this)
-        prefs = getSharedPreferences("jarvis_prefs", MODE_PRIVATE)
+    tts = TextToSpeech(this, this)
+    prefs = getSharedPreferences("jarvis_prefs", MODE_PRIVATE)
 
-        val layout = LinearLayout(this)
-        layout.orientation = LinearLayout.VERTICAL
-        layout.gravity = Gravity.CENTER
-        layout.setPadding(40, 40, 40, 40)
-        layout.setBackgroundColor(Color.rgb(5, 5, 16))
+    val layout = LinearLayout(this)
+    layout.orientation = LinearLayout.VERTICAL
+    layout.gravity = Gravity.CENTER
+    layout.setPadding(45, 45, 45, 45)
+    layout.setBackgroundColor(Color.rgb(3, 5, 18))
 
-        val title = TextView(this)
-        title.text = "JARVIS NATIVE"
-        title.textSize = 30f
-        title.setTextColor(Color.CYAN)
-        title.gravity = Gravity.CENTER
+    val title = TextView(this)
+    title.text = "JARVIS"
+    title.textSize = 42f
+    title.setTextColor(Color.CYAN)
+    title.gravity = Gravity.CENTER
+    title.setPadding(0, 0, 0, 20)
 
-        statusText = TextView(this)
-        statusText.text = "Tap mic and speak a command"
-        statusText.textSize = 18f
-        statusText.setTextColor(Color.WHITE)
-        statusText.gravity = Gravity.CENTER
-        statusText.setPadding(0, 40, 0, 20)
+    val orb = TextView(this)
+    orb.text = "◉"
+    orb.textSize = 90f
+    orb.setTextColor(Color.CYAN)
+    orb.gravity = Gravity.CENTER
+    orb.setShadowLayer(35f, 0f, 0f, Color.CYAN)
 
-        commandText = TextView(this)
-        commandText.text = "Try: play kesariya on youtube"
-        commandText.textSize = 16f
-        commandText.setTextColor(Color.LTGRAY)
-        commandText.gravity = Gravity.CENTER
-        commandText.setPadding(0, 20, 0, 40)
+    statusText = TextView(this)
+    statusText.text = "SYSTEM ONLINE"
+    statusText.textSize = 20f
+    statusText.setTextColor(Color.WHITE)
+    statusText.gravity = Gravity.CENTER
+    statusText.setPadding(0, 15, 0, 10)
 
-        val micButton = Button(this)
-        geminiKeyInput = EditText(this)
-geminiKeyInput.hint = "Paste Gemini API Key here"
-geminiKeyInput.setText(prefs.getString("gemini_key", ""))
-geminiKeyInput.setTextColor(Color.WHITE)
-geminiKeyInput.setHintTextColor(Color.GRAY)
-geminiKeyInput.inputType = InputType.TYPE_CLASS_TEXT
-geminiKeyInput.setPadding(20, 20, 20, 20)
+    commandText = TextView(this)
+    commandText.text = "Say: play kesariya on youtube"
+    commandText.textSize = 15f
+    commandText.setTextColor(Color.LTGRAY)
+    commandText.gravity = Gravity.CENTER
+    commandText.setPadding(0, 0, 0, 35)
 
-val saveKeyButton = Button(this)
-saveKeyButton.text = "Save Gemini Key"
+    val micButton = Button(this)
+    micButton.text = "🎙  SPEAK TO JARVIS"
+    micButton.textSize = 18f
+    micButton.setTextColor(Color.WHITE)
+    micButton.setPadding(30, 22, 30, 22)
 
-saveKeyButton.setOnClickListener {
-    prefs.edit()
-        .putString("gemini_key", geminiKeyInput.text.toString().trim())
-        .apply()
+    val btnBg = GradientDrawable()
+    btnBg.cornerRadius = 45f
+    btnBg.setColor(Color.rgb(0, 120, 140))
+    btnBg.setStroke(3, Color.CYAN)
+    micButton.background = btnBg
 
-    speak("Gemini key saved")
-    statusText.text = "Gemini key saved"
-}
-        micButton.text = "🎙 Speak to Jarvis"
-        micButton.textSize = 20f
-        micButton.setPadding(30, 20, 30, 20)
-
-        micButton.setOnClickListener {
-            checkMicPermissionAndListen()
-        }
-
-        val helpText = TextView(this)
-        helpText.text = """
-            Commands:
-            
-            open youtube
-            open spotify
-            open whatsapp
-            play kesariya on youtube
-            play arijit singh on spotify
-            play perfect on youtube music
-        """.trimIndent()
-        helpText.textSize = 15f
-        helpText.setTextColor(Color.GRAY)
-        helpText.gravity = Gravity.CENTER
-        helpText.setPadding(0, 45, 0, 0)
-
-        layout.addView(title)
-        layout.addView(statusText)
-        layout.addView(commandText)
-        layout.addView(micButton)
-        layout.addView(geminiKeyInput)
-        layout.addView(saveKeyButton)
-        layout.addView(helpText)
-
-        setContentView(layout)
-
-        speak("Jarvis online")
+    micButton.setOnClickListener {
+        statusText.text = "LISTENING..."
+        checkMicPermissionAndListen()
     }
+
+    val settingsButton = Button(this)
+    settingsButton.text = "⚙ GEMINI KEY SETTINGS"
+    settingsButton.textSize = 14f
+    settingsButton.setTextColor(Color.WHITE)
+
+    val settingsBg = GradientDrawable()
+    settingsBg.cornerRadius = 35f
+    settingsBg.setColor(Color.rgb(20, 25, 45))
+    settingsBg.setStroke(2, Color.DKGRAY)
+    settingsButton.background = settingsBg
+
+    geminiKeyInput = EditText(this)
+    geminiKeyInput.hint = "Paste Gemini API Key"
+    geminiKeyInput.setText(prefs.getString("gemini_key", ""))
+    geminiKeyInput.setTextColor(Color.WHITE)
+    geminiKeyInput.setHintTextColor(Color.GRAY)
+    geminiKeyInput.inputType = InputType.TYPE_CLASS_TEXT
+    geminiKeyInput.visibility = View.GONE
+
+    val saveKeyButton = Button(this)
+    saveKeyButton.text = "SAVE GEMINI KEY"
+    saveKeyButton.visibility = View.GONE
+
+    settingsButton.setOnClickListener {
+        if (geminiKeyInput.visibility == View.GONE) {
+            geminiKeyInput.visibility = View.VISIBLE
+            saveKeyButton.visibility = View.VISIBLE
+        } else {
+            geminiKeyInput.visibility = View.GONE
+            saveKeyButton.visibility = View.GONE
+        }
+    }
+
+    saveKeyButton.setOnClickListener {
+        prefs.edit()
+            .putString("gemini_key", geminiKeyInput.text.toString().trim())
+            .apply()
+
+        speak("Gemini key saved")
+        statusText.text = "GEMINI KEY SAVED"
+        geminiKeyInput.visibility = View.GONE
+        saveKeyButton.visibility = View.GONE
+    }
+
+    val helpText = TextView(this)
+    helpText.text = """
+        Try:
+        
+        play arijit singh sad song
+        open whatsapp
+        camera kholo
+        take selfie
+        hello jarvis
+    """.trimIndent()
+    helpText.textSize = 14f
+    helpText.setTextColor(Color.GRAY)
+    helpText.gravity = Gravity.CENTER
+    helpText.setPadding(0, 35, 0, 0)
+
+    layout.addView(title)
+    layout.addView(orb)
+    layout.addView(statusText)
+    layout.addView(commandText)
+    layout.addView(micButton)
+    layout.addView(settingsButton)
+    layout.addView(geminiKeyInput)
+    layout.addView(saveKeyButton)
+    layout.addView(helpText)
+
+    setContentView(layout)
+
+    speak("Jarvis online")
+}
+
+        
 
     private fun checkMicPermissionAndListen() {
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO)
