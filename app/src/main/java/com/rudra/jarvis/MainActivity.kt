@@ -135,7 +135,7 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
             RecognizerIntent.EXTRA_LANGUAGE_MODEL,
             RecognizerIntent.LANGUAGE_MODEL_FREE_FORM
         )
-        intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, "hi-IN")
+        intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, "en-IN")
         intent.putExtra(RecognizerIntent.EXTRA_PROMPT, "Speak your command")
 
         try {
