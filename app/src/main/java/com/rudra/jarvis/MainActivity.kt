@@ -2,7 +2,7 @@ package com.rudra.jarvis
 import java.net.URL
 import org.json.JSONObject
 import kotlin.concurrent.thread
-import android.content.pm.PackageManager
+
 
 import android.Manifest
 import android.app.Activity
