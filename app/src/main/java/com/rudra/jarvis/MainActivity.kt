@@ -30,16 +30,27 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
     private val micPermissionCode = 201
 
     private val appPackages = mapOf(
-        "youtube" to "com.google.android.youtube",
-        "spotify" to "com.spotify.music",
-        "youtube music" to "com.google.android.apps.youtube.music",
-        "whatsapp" to "com.whatsapp",
-        "instagram" to "com.instagram.android",
-        "chrome" to "com.android.chrome",
-        "gmail" to "com.google.android.gm",
-        "maps" to "com.google.android.apps.maps",
-        "google maps" to "com.google.android.apps.maps"
-    )
+
+    "youtube" to "com.google.android.youtube",
+    "spotify" to "com.spotify.music",
+    "youtube music" to "com.google.android.apps.youtube.music",
+
+    "whatsapp" to "com.whatsapp",
+    "instagram" to "com.instagram.android",
+
+    "chrome" to "com.android.chrome",
+    "gmail" to "com.google.android.gm",
+
+    "maps" to "com.google.android.apps.maps",
+    "google maps" to "com.google.android.apps.maps",
+
+    "camera" to "com.android.camera",
+    "settings" to "com.android.settings",
+    "photos" to "com.google.android.apps.photos",
+    "gallery" to "com.miui.gallery",
+    "calculator" to "com.miui.calculator"
+
+)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
