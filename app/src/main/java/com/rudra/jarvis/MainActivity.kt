@@ -130,7 +130,7 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
             RecognizerIntent.EXTRA_LANGUAGE_MODEL,
             RecognizerIntent.LANGUAGE_MODEL_FREE_FORM
         )
-        intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, "en-IN")
+        intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, "hi-IN")
         intent.putExtra(RecognizerIntent.EXTRA_PROMPT, "Speak your command")
 
         try {
@@ -156,37 +156,83 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
     }
 
     private fun handleCommand(command: String) {
-        when {
-            command.startsWith("open ") -> {
-                val appName = command.removePrefix("open ").trim()
-                openApp(appName)
-            }
 
-            command.contains("play") && command.contains("youtube music") -> {
-                val song = extractSongName(command, "youtube music")
-                playOnYouTubeMusic(song)
-            }
+    val cmd = command.lowercase()
 
-            command.contains("play") && command.contains("youtube") -> {
-                val song = extractSongName(command, "youtube")
-                playOnYouTube(song)
-            }
+    when {
 
-            command.contains("play") && command.contains("spotify") -> {
-                val song = extractSongName(command, "spotify")
-                playOnSpotify(song)
-            }
+        cmd.startsWith("open ") ||
+        cmd.contains("khol") ||
+        cmd.contains("khol do") -> {
 
-            command.contains("hello") || command.contains("hi") -> {
-                statusText.text = "Hello sir"
-                speak("Hello sir, I am ready")
-            }
+            val appName = cmd
+                .replace("open", "")
+                .replace("khol do", "")
+                .replace("khol", "")
+                .trim()
 
-            else -> {
-                statusText.text = "Command not understood"
-                speak("Sorry, I did not understand that command")
+            openApp(appName)
+        }
+
+        cmd.contains("play") ||
+        cmd.contains("chalao") ||
+        cmd.contains("bajao") ||
+        cmd.contains("gana") -> {
+
+            when {
+
+                cmd.contains("spotify") -> {
+
+                    val song = cmd
+                        .replace("spotify", "")
+                        .replace("play", "")
+                        .replace("chalao", "")
+                        .replace("gana", "")
+                        .trim()
+
+                    playOnSpotify(song)
+                }
+
+                cmd.contains("youtube music") -> {
+
+                    val song = cmd
+                        .replace("youtube music", "")
+                        .replace("play", "")
+                        .replace("chalao", "")
+                        .replace("gana", "")
+                        .trim()
+
+                    playOnYouTubeMusic(song)
+                }
+
+                else -> {
+
+                    val song = cmd
+                        .replace("youtube", "")
+                        .replace("play", "")
+                        .replace("chalao", "")
+                        .replace("gana", "")
+                        .trim()
+
+                    playOnYouTube(song)
+                }
             }
         }
+
+        cmd.contains("hello") ||
+        cmd.contains("hi") ||
+        cmd.contains("namaste") -> {
+
+            statusText.text = "Hello sir"
+            speak("Hello sir")
+        }
+
+        else -> {
+
+            statusText.text = "Command not understood"
+            speak("Sorry, command samajh nahi aaya")
+        }
+    }
     }
 
     private fun extractSongName(command: String, platform: String): String {
