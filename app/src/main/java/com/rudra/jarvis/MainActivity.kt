@@ -2,7 +2,8 @@ package com.rudra.jarvis
 import java.net.URL
 import org.json.JSONObject
 import kotlin.concurrent.thread
-
+import android.content.SharedPreferences
+import android.text.InputType
 
 import android.Manifest
 import android.app.Activity
@@ -26,7 +27,9 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
     private lateinit var statusText: TextView
     private lateinit var commandText: TextView
     private lateinit var tts: TextToSpeech
-
+    
+private lateinit var prefs: SharedPreferences
+private lateinit var geminiKeyInput: EditText
     private val speechRequestCode = 101
     private val micPermissionCode = 201
 
@@ -35,6 +38,7 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
         super.onCreate(savedInstanceState)
 
         tts = TextToSpeech(this, this)
+        prefs = getSharedPreferences("jarvis_prefs", MODE_PRIVATE)
 
         val layout = LinearLayout(this)
         layout.orientation = LinearLayout.VERTICAL
@@ -63,6 +67,25 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
         commandText.setPadding(0, 20, 0, 40)
 
         val micButton = Button(this)
+        geminiKeyInput = EditText(this)
+geminiKeyInput.hint = "Paste Gemini API Key here"
+geminiKeyInput.setText(prefs.getString("gemini_key", ""))
+geminiKeyInput.setTextColor(Color.WHITE)
+geminiKeyInput.setHintTextColor(Color.GRAY)
+geminiKeyInput.inputType = InputType.TYPE_CLASS_TEXT
+geminiKeyInput.setPadding(20, 20, 20, 20)
+
+val saveKeyButton = Button(this)
+saveKeyButton.text = "Save Gemini Key"
+
+saveKeyButton.setOnClickListener {
+    prefs.edit()
+        .putString("gemini_key", geminiKeyInput.text.toString().trim())
+        .apply()
+
+    speak("Gemini key saved")
+    statusText.text = "Gemini key saved"
+}
         micButton.text = "🎙 Speak to Jarvis"
         micButton.textSize = 20f
         micButton.setPadding(30, 20, 30, 20)
@@ -91,6 +114,8 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
         layout.addView(statusText)
         layout.addView(commandText)
         layout.addView(micButton)
+        layout.addView(geminiKeyInput)
+        layout.addView(saveKeyButton)
         layout.addView(helpText)
 
         setContentView(layout)
@@ -161,100 +186,151 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
     }
 
     private fun handleCommand(command: String) {
-        val cmd = command.lowercase()
+    val cmd = command.lowercase()
 
-        val normalized = cmd
-    .replace("ओपन", "open")
-    .replace("व्हाट्सएप", "whatsapp")
-    .replace("यूट्यूब", "youtube")
-    .replace("स्पॉटिफाई", "spotify")
-    .replace("कैमरा", "camera")
-    .replace("सेटिंग", "settings")
+    val normalized = cmd
+        .replace("ओपन", "open")
+        .replace("व्हाट्सएप", "whatsapp")
+        .replace("यूट्यूब", "youtube")
+        .replace("स्पॉटिफाई", "spotify")
+        .replace("कैमरा", "camera")
+        .replace("सेटिंग", "settings")
 
-    
-    when {
-        normalized.contains("take selfie") ||
-normalized.contains("selfie lo") ||
-normalized.contains("selfie le lo") ||
-normalized.contains("photo lo") ||
-normalized.contains("photo le lo") -> {
-    openCameraSelfie()
-}
+    askGeminiForAction(normalized)
+    }
+    private fun askGeminiForAction(command: String) {
 
-        normalized.startsWith("open ") ||
-        normalized.contains("khol") ||
-        normalized.contains("khol do") -> {
+    val geminiKey = prefs.getString("gemini_key", "") ?: ""
 
-            val appName = normalized
-                .replace("open", "")
-                .replace("khol do", "")
-                .replace("khol", "")
+    if (geminiKey.isBlank()) {
+        speak("Please save Gemini API key first")
+        statusText.text = "Gemini API key missing"
+        return
+    }
+
+    statusText.text = "Thinking..."
+
+    thread {
+        try {
+            val prompt = """
+                You are Jarvis, an Android assistant.
+                Convert the user's command into ONLY valid JSON.
+                
+                Possible actions:
+                1. youtube
+                2. spotify
+                3. open_app
+                4. selfie
+                5. chat
+                
+                Rules:
+                - If user wants to play song/music/video, use youtube unless Spotify is mentioned.
+                - If user wants to open app, use open_app.
+                - If user wants selfie/photo, use selfie.
+                - If normal talk, use chat.
+                - Return ONLY JSON. No markdown.
+                
+                JSON format:
+                {"action":"youtube","query":"song name","reply":"Playing song"}
+                
+                User command: $command
+            """.trimIndent()
+
+            val requestJson = JSONObject()
+            val contents = org.json.JSONArray()
+            val contentObj = JSONObject()
+            val parts = org.json.JSONArray()
+            val partObj = JSONObject()
+
+            partObj.put("text", prompt)
+            parts.put(partObj)
+            contentObj.put("parts", parts)
+            contents.put(contentObj)
+            requestJson.put("contents", contents)
+
+            val url = URL(
+                "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=$geminiKey"
+            )
+
+            val connection = url.openConnection() as java.net.HttpURLConnection
+            connection.requestMethod = "POST"
+            connection.setRequestProperty("Content-Type", "application/json")
+            connection.doOutput = true
+
+            connection.outputStream.use {
+                it.write(requestJson.toString().toByteArray())
+            }
+
+            val response = connection.inputStream.bufferedReader().readText()
+            val json = JSONObject(response)
+
+            var text = json
+                .getJSONArray("candidates")
+                .getJSONObject(0)
+                .getJSONObject("content")
+                .getJSONArray("parts")
+                .getJSONObject(0)
+                .getString("text")
                 .trim()
 
-            openApp(appName)
-        }
+            text = text
+                .replace("```json", "")
+                .replace("```", "")
+                .trim()
 
-        normalized.contains("play") ||
-        normalized.contains("chalao") ||
-        normalized.contains("bajao") ||
-        normalized.contains("gana") -> {
+            val actionJson = JSONObject(text)
 
-            when {
+            runOnUiThread {
+                runGeminiAction(actionJson)
+            }
 
-                normalized.contains("spotify") -> {
-
-                    val song = normalized
-                        .replace("spotify", "")
-                        .replace("play", "")
-                        .replace("chalao", "")
-                        .replace("gana", "")
-                        .trim()
-
-                    playOnSpotify(song)
-                }
-
-                normalized.contains("youtube music") -> {
-
-                    val song = normalized
-                        .replace("youtube music", "")
-                        .replace("play", "")
-                        .replace("chalao", "")
-                        .replace("gana", "")
-                        .trim()
-
-                    playOnYouTubeMusic(song)
-                }
-
-                else -> {
-
-                    val song = normalized
-                        .replace("youtube", "")
-                        .replace("play", "")
-                        .replace("chalao", "")
-                        .replace("gana", "")
-                        .trim()
-
-                    playOnYouTube(song)
-                }
+        } catch (e: Exception) {
+            runOnUiThread {
+                statusText.text = "Gemini error"
+                speak("Sorry, Gemini se response nahi aaya")
             }
         }
+    }
+    }
+    private fun runGeminiAction(json: JSONObject) {
 
-        normalized.contains("hello") ||
-        normalized.contains("hi") ||
-        normalized.contains("namaste") -> {
+    val action = json.optString("action", "chat")
+    val query = json.optString("query", "")
+    val reply = json.optString("reply", "")
 
-            statusText.text = "Hello sir"
-            speak("Hello sir")
+    if (reply.isNotBlank()) {
+        speak(reply)
+    }
+
+    when (action) {
+
+        "youtube" -> {
+            playOnYouTube(query)
+        }
+
+        "spotify" -> {
+            playOnSpotify(query)
+        }
+
+        "open_app" -> {
+            openApp(query)
+        }
+
+        "selfie" -> {
+            openCameraSelfie()
+        }
+
+        "chat" -> {
+            statusText.text = reply.ifBlank { "Jarvis ready" }
+            speak(reply.ifBlank { "I am ready" })
         }
 
         else -> {
-
-            statusText.text = "Command not understood"
-            speak("Sorry, command samajh nahi aaya")
+            statusText.text = "Unknown action"
+            speak("I did not understand the action")
         }
     }
     }
-
     private fun extractSongName(command: String, platform: String): String {
         return command
             .replace("play", "")
