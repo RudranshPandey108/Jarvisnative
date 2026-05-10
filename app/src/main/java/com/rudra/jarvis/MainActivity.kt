@@ -1,5 +1,4 @@
 package com.rudra.jarvis
-import android.os.Build
 
 import android.Manifest
 import android.app.Activity
@@ -10,6 +9,7 @@ import android.content.pm.PackageManager
 import android.graphics.Color
 import android.graphics.drawable.GradientDrawable
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.speech.RecognizerIntent
 import android.speech.tts.TextToSpeech
@@ -29,12 +29,15 @@ import kotlin.concurrent.thread
 
 class MainActivity : Activity(), TextToSpeech.OnInitListener {
 
+    // YOUTUBE API KEY YAHAN PASTE KARO
+    private val YOUTUBE_API_KEY = "AIzaSyAE7-4GLJQNAk5vxhPBCrRxB4pa85eg6gE"
+
     private lateinit var statusText: TextView
     private lateinit var commandText: TextView
     private lateinit var chatBox: TextView
     private lateinit var typedInput: EditText
-    private lateinit var geminiKeyInput: EditText
-    private lateinit var youtubeKeyInput: EditText
+    private lateinit var openRouterKeyInput: EditText
+    private lateinit var groqKeyInput: EditText
     private lateinit var tts: TextToSpeech
     private lateinit var prefs: SharedPreferences
 
@@ -77,7 +80,7 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
         statusText.setPadding(0, 15, 0, 10)
 
         commandText = TextView(this)
-        commandText.text = "Say: play kesariya on youtube"
+        commandText.text = "Say: play channa mereya"
         commandText.textSize = 15f
         commandText.setTextColor(Color.LTGRAY)
         commandText.gravity = Gravity.CENTER
@@ -136,72 +139,70 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
                 speak("Continuous mode off")
             }
         }
+
         val serviceButton = Button(this)
-serviceButton.text = "🚀 START JARVIS SERVICE"
+        serviceButton.text = "🚀 START JARVIS SERVICE"
+        serviceButton.setOnClickListener {
+            val intent = Intent(this, JarvisService::class.java)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                startForegroundService(intent)
+            } else {
+                startService(intent)
+            }
+            statusText.text = "JARVIS service started"
+            speak("Jarvis service started")
+        }
 
-serviceButton.setOnClickListener {
-    val intent = Intent(this, JarvisService::class.java)
-
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-        startForegroundService(intent)
-    } else {
-        startService(intent)
-    }
-
-    statusText.text = "JARVIS service started"
-    speak("Jarvis service started")
-}
-val accessibilityButton = Button(this)
-accessibilityButton.text = "♿ ENABLE ACCESSIBILITY"
-
-accessibilityButton.setOnClickListener {
-    val intent = Intent(android.provider.Settings.ACTION_ACCESSIBILITY_SETTINGS)
-    startActivity(intent)
-    speak("Enable Jarvis accessibility service")
-}
+        val accessibilityButton = Button(this)
+        accessibilityButton.text = "♿ ENABLE ACCESSIBILITY"
+        accessibilityButton.setOnClickListener {
+            val intent = Intent(android.provider.Settings.ACTION_ACCESSIBILITY_SETTINGS)
+            startActivity(intent)
+            speak("Enable Jarvis accessibility service")
+        }
 
         val settingsButton = Button(this)
-        settingsButton.text = "⚙ API KEY SETTINGS"
+        settingsButton.text = "⚙ AI KEY SETTINGS"
         settingsButton.setTextColor(Color.WHITE)
         settingsButton.background = roundedBg(Color.rgb(20, 25, 45), Color.DKGRAY, 35f)
 
-        geminiKeyInput = EditText(this)
-        geminiKeyInput.hint = "Paste Gemini API Key"
-        geminiKeyInput.setText(prefs.getString("gemini_key", ""))
-        geminiKeyInput.setTextColor(Color.WHITE)
-        geminiKeyInput.setHintTextColor(Color.GRAY)
-        geminiKeyInput.inputType = InputType.TYPE_CLASS_TEXT
-        geminiKeyInput.visibility = View.GONE
+        openRouterKeyInput = EditText(this)
+        openRouterKeyInput.hint = "Paste OpenRouter API Key"
+        openRouterKeyInput.setText(prefs.getString("openrouter_key", ""))
+        openRouterKeyInput.setTextColor(Color.WHITE)
+        openRouterKeyInput.setHintTextColor(Color.GRAY)
+        openRouterKeyInput.inputType = InputType.TYPE_CLASS_TEXT
+        openRouterKeyInput.visibility = View.GONE
 
-        youtubeKeyInput = EditText(this)
-        youtubeKeyInput.hint = "Paste YouTube API Key"
-        youtubeKeyInput.setText(prefs.getString("youtube_key", ""))
-        youtubeKeyInput.setTextColor(Color.WHITE)
-        youtubeKeyInput.setHintTextColor(Color.GRAY)
-        youtubeKeyInput.inputType = InputType.TYPE_CLASS_TEXT
-        youtubeKeyInput.visibility = View.GONE
+        groqKeyInput = EditText(this)
+        groqKeyInput.hint = "Paste Groq API Key"
+        groqKeyInput.setText(prefs.getString("groq_key", ""))
+        groqKeyInput.setTextColor(Color.WHITE)
+        groqKeyInput.setHintTextColor(Color.GRAY)
+        groqKeyInput.inputType = InputType.TYPE_CLASS_TEXT
+        groqKeyInput.visibility = View.GONE
 
         val saveKeyButton = Button(this)
-        saveKeyButton.text = "SAVE API KEYS"
+        saveKeyButton.text = "SAVE AI KEYS"
         saveKeyButton.visibility = View.GONE
 
         settingsButton.setOnClickListener {
-            val show = geminiKeyInput.visibility == View.GONE
-            geminiKeyInput.visibility = if (show) View.VISIBLE else View.GONE
-            youtubeKeyInput.visibility = if (show) View.VISIBLE else View.GONE
+            val show = openRouterKeyInput.visibility == View.GONE
+            openRouterKeyInput.visibility = if (show) View.VISIBLE else View.GONE
+            groqKeyInput.visibility = if (show) View.VISIBLE else View.GONE
             saveKeyButton.visibility = if (show) View.VISIBLE else View.GONE
         }
 
         saveKeyButton.setOnClickListener {
             prefs.edit()
-                .putString("gemini_key", geminiKeyInput.text.toString().trim())
-                .putString("youtube_key", youtubeKeyInput.text.toString().trim())
+                .putString("openrouter_key", openRouterKeyInput.text.toString().trim())
+                .putString("groq_key", groqKeyInput.text.toString().trim())
                 .apply()
 
-            statusText.text = "API KEYS SAVED"
-            speak("API keys saved")
-            geminiKeyInput.visibility = View.GONE
-            youtubeKeyInput.visibility = View.GONE
+            statusText.text = "AI KEYS SAVED"
+            speak("AI keys saved")
+            openRouterKeyInput.visibility = View.GONE
+            groqKeyInput.visibility = View.GONE
             saveKeyButton.visibility = View.GONE
         }
 
@@ -211,11 +212,13 @@ accessibilityButton.setOnClickListener {
             
             hi hello
             google pe motu patlu search karo
-            play arijit singh sad song
+            play channa mereya
             open whatsapp
             camera kholo
             take selfie
             maps pe lucknow railway station dikhao
+            call 9876543210
+            whatsapp 9876543210 hello
         """.trimIndent()
         helpText.textSize = 14f
         helpText.setTextColor(Color.GRAY)
@@ -234,26 +237,43 @@ accessibilityButton.setOnClickListener {
         layout.addView(serviceButton)
         layout.addView(accessibilityButton)
         layout.addView(settingsButton)
-        layout.addView(geminiKeyInput)
-        layout.addView(youtubeKeyInput)
+        layout.addView(openRouterKeyInput)
+        layout.addView(groqKeyInput)
         layout.addView(saveKeyButton)
         layout.addView(helpText)
 
         setContentView(layout)
 
-val launchedAsAssistant =
-    intent.action == Intent.ACTION_ASSIST ||
-    intent.action == Intent.ACTION_VOICE_COMMAND ||
-    intent.getBooleanExtra("wake_word_detected", false)
+        val launchedAsAssistant =
+            intent.action == Intent.ACTION_ASSIST ||
+            intent.action == Intent.ACTION_VOICE_COMMAND ||
+            intent.getBooleanExtra("wake_word_detected", false)
 
-if (launchedAsAssistant) {
-    statusText.text = "Jarvis activated"
-    addChat("Jarvis", "Yes sir, I am listening.")
-    speak("Yes sir, I am listening.")
-    checkMicPermissionAndListen()
-} else {
-    speak("Jarvis online")
-}
+        if (launchedAsAssistant) {
+            statusText.text = "Jarvis activated"
+            addChat("Jarvis", "Yes sir, I am listening.")
+            speak("Yes sir, I am listening.")
+            checkMicPermissionAndListen()
+        } else {
+            speak("Jarvis online")
+        }
+    }
+
+    override fun onNewIntent(intent: Intent?) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+
+        val launchedAsAssistant =
+            intent?.action == Intent.ACTION_ASSIST ||
+            intent?.action == Intent.ACTION_VOICE_COMMAND ||
+            intent?.getBooleanExtra("wake_word_detected", false) == true
+
+        if (launchedAsAssistant) {
+            statusText.text = "Jarvis activated"
+            addChat("Jarvis", "Yes sir, I am listening.")
+            speak("Yes sir, I am listening.")
+            checkMicPermissionAndListen()
+        }
     }
 
     private fun roundedBg(color: Int, strokeColor: Int, radius: Float): GradientDrawable {
@@ -296,22 +316,6 @@ if (launchedAsAssistant) {
             speak("Speech recognition is not available")
         }
     }
-    override fun onNewIntent(intent: Intent?) {
-    super.onNewIntent(intent)
-    setIntent(intent)
-
-    val launchedAsAssistant =
-        intent?.action == Intent.ACTION_ASSIST ||
-        intent?.action == Intent.ACTION_VOICE_COMMAND ||
-        intent?.getBooleanExtra("wake_word_detected", false) == true
-
-    if (launchedAsAssistant) {
-        statusText.text = "Jarvis activated"
-        addChat("Jarvis", "Yes sir, I am listening.")
-        speak("Yes sir, I am listening.")
-        checkMicPermissionAndListen()
-    }
-    }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
@@ -353,357 +357,372 @@ if (launchedAsAssistant) {
         statusText.text = "Waiting for Hey Jarvis"
         if (continuousMode) startVoiceInput()
     }
-    private fun extractPhoneNumber(text: String): String {
-    val regex = Regex("\\d{10,13}")
-    return regex.find(text)?.value ?: ""
-}
 
-private fun openDialer(number: String) {
-    if (number.isBlank()) {
-        speak("Please say the phone number")
-        return
+    private fun handleCommand(command: String) {
+        val normalized = normalizeCommand(command)
+
+        when {
+            normalized.startsWith("open ") -> {
+                val app = normalized.replace("open", "").trim()
+                openApp(app)
+                return
+            }
+
+            normalized.contains("google") && normalized.contains("search") -> {
+                val q = normalized
+                    .replace("google", "")
+                    .replace("pe", "")
+                    .replace("par", "")
+                    .replace("search", "")
+                    .replace("karo", "")
+                    .replace("kar", "")
+                    .trim()
+                openWebSearch(q)
+                return
+            }
+
+            normalized.contains("youtube") ||
+            normalized.contains("chalao") ||
+            normalized.contains("gana") ||
+            normalized.contains("play") ||
+            normalized.contains("song") ||
+            normalized.contains("music") -> {
+                val q = normalized
+                    .replace("youtube", "")
+                    .replace("pe", "")
+                    .replace("par", "")
+                    .replace("play", "")
+                    .replace("chalao", "")
+                    .replace("gana", "")
+                    .replace("song", "")
+                    .replace("music", "")
+                    .trim()
+                playOnYouTube(q)
+                return
+            }
+
+            normalized.contains("camera") -> {
+                openApp("camera")
+                return
+            }
+
+            normalized.contains("selfie") -> {
+                openCameraSelfie()
+                return
+            }
+
+            normalized.startsWith("call ") ||
+            normalized.contains("phone lagao") ||
+            normalized.contains("call karo") -> {
+                val number = extractPhoneNumber(normalized)
+                openDialer(number)
+                return
+            }
+
+            normalized.startsWith("message ") ||
+            normalized.startsWith("sms ") -> {
+                val text = normalized
+                    .replace("message", "")
+                    .replace("sms", "")
+                    .trim()
+                openSms(text)
+                return
+            }
+
+            normalized.startsWith("whatsapp ") ||
+            normalized.contains("whatsapp message") -> {
+                val text = normalized
+                    .replace("whatsapp message", "")
+                    .replace("whatsapp", "")
+                    .trim()
+                openWhatsApp(text)
+                return
+            }
+
+            normalized.contains("maps") ||
+            normalized.contains("map") ||
+            normalized.contains("location") ||
+            normalized.contains("route") -> {
+                val q = normalized
+                    .replace("maps", "")
+                    .replace("map", "")
+                    .replace("pe", "")
+                    .replace("par", "")
+                    .replace("dikhao", "")
+                    .replace("show", "")
+                    .replace("route", "")
+                    .replace("location", "")
+                    .trim()
+                openMaps(q)
+                return
+            }
+
+            normalized.contains("go back") ||
+            normalized.contains("back jao") ||
+            normalized.contains("peeche jao") -> {
+                JarvisAccessibilityService.instance?.goBack()
+                    ?: speak("Please enable Jarvis accessibility service")
+                return
+            }
+
+            normalized.contains("go home") ||
+            normalized.contains("home jao") ||
+            normalized.contains("home screen") -> {
+                JarvisAccessibilityService.instance?.goHome()
+                    ?: speak("Please enable Jarvis accessibility service")
+                return
+            }
+
+            normalized.contains("recent") ||
+            normalized.contains("recent apps") -> {
+                JarvisAccessibilityService.instance?.openRecents()
+                    ?: speak("Please enable Jarvis accessibility service")
+                return
+            }
+
+            normalized.contains("notification") ||
+            normalized.contains("notifications kholo") -> {
+                JarvisAccessibilityService.instance?.openNotifications()
+                    ?: speak("Please enable Jarvis accessibility service")
+                return
+            }
+
+            normalized.contains("scroll down") ||
+            normalized.contains("neeche scroll") ||
+            normalized.contains("niche scroll") -> {
+                JarvisAccessibilityService.instance?.scrollDown()
+                    ?: speak("Please enable Jarvis accessibility service")
+                return
+            }
+
+            normalized.contains("scroll up") ||
+            normalized.contains("upar scroll") -> {
+                JarvisAccessibilityService.instance?.scrollUp()
+                    ?: speak("Please enable Jarvis accessibility service")
+                return
+            }
+
+            normalized.contains("tap center") ||
+            normalized.contains("beech mein tap") -> {
+                JarvisAccessibilityService.instance?.tapCenter()
+                    ?: speak("Please enable Jarvis accessibility service")
+                return
+            }
+        }
+
+        askAIChat(normalized)
     }
 
-    val intent = Intent(Intent.ACTION_DIAL)
-    intent.data = Uri.parse("tel:$number")
-    startActivity(intent)
-}
-
-private fun openSms(text: String) {
-    val number = extractPhoneNumber(text)
-    val message = text.replace(number, "").trim()
-
-    if (number.isBlank()) {
-        speak("Please say the phone number")
-        return
+    private fun normalizeCommand(command: String): String {
+        return command.lowercase()
+            .replace("ओपन", "open")
+            .replace("व्हाट्सएप", "whatsapp")
+            .replace("यूट्यूब", "youtube")
+            .replace("स्पॉटिफाई", "spotify")
+            .replace("कैमरा", "camera")
+            .replace("सेटिंग", "settings")
+            .replace("गूगल", "google")
+            .replace("मैप", "maps")
+            .trim()
     }
 
-    val intent = Intent(Intent.ACTION_SENDTO)
-    intent.data = Uri.parse("smsto:$number")
-    intent.putExtra("sms_body", message)
-
-    startActivity(intent)
-}
-
-private fun openWhatsApp(text: String) {
-    val number = extractPhoneNumber(text)
-    val message = text.replace(number, "").trim()
-
-    if (number.isBlank()) {
-        openApp("whatsapp")
-        return
-    }
-
-    val cleanNumber = if (number.length == 10) {
-        "91$number"
-    } else {
-        number
-    }
-
-    val url = "https://wa.me/$cleanNumber?text=${Uri.encode(message)}"
-    val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
-
-    try {
-        intent.setPackage("com.whatsapp")
-        startActivity(intent)
-    } catch (e: Exception) {
-        startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
-    }
-}
-
-private fun handleCommand(command: String) {
-    val normalized = command.lowercase()
-        .replace("ओपन", "open")
-        .replace("व्हाट्सएप", "whatsapp")
-        .replace("यूट्यूब", "youtube")
-        .replace("स्पॉटिफाई", "spotify")
-        .replace("कैमरा", "camera")
-        .replace("सेटिंग", "settings")
-
-    // Basic offline commands first
-    when {
-        normalized.startsWith("open ") -> {
-            val app = normalized.replace("open", "").trim()
-            openApp(app)
-            return
-        }
-
-        normalized.contains("google") && normalized.contains("search") -> {
-            val q = normalized
-                .replace("google", "")
-                .replace("pe", "")
-                .replace("par", "")
-                .replace("search", "")
-                .replace("karo", "")
-                .replace("kar", "")
-                .trim()
-
-            openWebSearch(q)
-            return
-        }
-
-        normalized.contains("youtube") || normalized.contains("chalao") || normalized.contains("gana") -> {
-            val q = normalized
-                .replace("youtube", "")
-                .replace("pe", "")
-                .replace("par", "")
-                .replace("play", "")
-                .replace("chalao", "")
-                .replace("gana", "")
-                .trim()
-
-            playOnYouTube(q)
-            return
-        }
-
-        normalized.contains("camera") || normalized.contains("कैमरा") -> {
-            openApp("camera")
-            return
-        }
-
-        normalized.contains("selfie") -> {
-            openCameraSelfie()
-            return
-        }
-        normalized.startsWith("call ") ||
-normalized.contains("phone lagao") ||
-normalized.contains("call karo") -> {
-    val number = extractPhoneNumber(normalized)
-    openDialer(number)
-    return
-}
-
-normalized.startsWith("message ") ||
-normalized.startsWith("sms ") -> {
-    val text = normalized
-        .replace("message", "")
-        .replace("sms", "")
-        .trim()
-
-    openSms(text)
-    return
-}
-
-normalized.startsWith("whatsapp ") ||
-normalized.contains("whatsapp message") -> {
-    val text = normalized
-        .replace("whatsapp message", "")
-        .replace("whatsapp", "")
-        .trim()
-
-    openWhatsApp(text)
-    return
-}
-
-        normalized.contains("go back") ||
-        normalized.contains("back jao") ||
-        normalized.contains("peeche jao") -> {
-            JarvisAccessibilityService.instance?.goBack()
-                ?: speak("Please enable Jarvis accessibility service")
-            return
-        }
-
-        normalized.contains("go home") ||
-        normalized.contains("home jao") ||
-        normalized.contains("home screen") -> {
-            JarvisAccessibilityService.instance?.goHome()
-                ?: speak("Please enable Jarvis accessibility service")
-            return
-        }
-
-        normalized.contains("recent") ||
-        normalized.contains("recent apps") -> {
-            JarvisAccessibilityService.instance?.openRecents()
-                ?: speak("Please enable Jarvis accessibility service")
-            return
-        }
-
-        normalized.contains("notification") ||
-        normalized.contains("notifications kholo") -> {
-            JarvisAccessibilityService.instance?.openNotifications()
-                ?: speak("Please enable Jarvis accessibility service")
-            return
-        }
-
-        normalized.contains("scroll down") ||
-        normalized.contains("neeche scroll") ||
-        normalized.contains("niche scroll") -> {
-            JarvisAccessibilityService.instance?.scrollDown()
-                ?: speak("Please enable Jarvis accessibility service")
-            return
-        }
-
-        normalized.contains("scroll up") ||
-        normalized.contains("upar scroll") -> {
-            JarvisAccessibilityService.instance?.scrollUp()
-                ?: speak("Please enable Jarvis accessibility service")
-            return
-        }
-
-        normalized.contains("tap center") ||
-        normalized.contains("beech mein tap") -> {
-            JarvisAccessibilityService.instance?.tapCenter()
-                ?: speak("Please enable Jarvis accessibility service")
-            return
-        }
-    }
-
-    // Only normal chat goes to Gemini
-    askGeminiForAction(normalized)
-}
     private fun addChat(sender: String, message: String) {
         chatBox.append("\n$sender: $message\n")
     }
 
-    private fun askGeminiForAction(command: String) {
-        val geminiKey = prefs.getString("gemini_key", "") ?: ""
+    private fun askAIChat(command: String) {
+        val openRouterKey = prefs.getString("openrouter_key", "") ?: ""
+        val groqKey = prefs.getString("groq_key", "") ?: ""
 
-        if (geminiKey.isBlank()) {
-            statusText.text = "Gemini API key missing"
-            speak("Please save Gemini API key first")
-            return
+        when {
+            openRouterKey.isNotBlank() -> askOpenRouter(command, openRouterKey)
+            groqKey.isNotBlank() -> askGroq(command, groqKey)
+            else -> {
+                val msg = "AI key missing. Basic commands still work."
+                statusText.text = "AI key missing"
+                addChat("Jarvis", msg)
+                speak(msg)
+            }
         }
+    }
 
-        statusText.text = "Thinking..."
+    private fun askOpenRouter(command: String, key: String) {
+        statusText.text = "Thinking with OpenRouter..."
 
         thread {
             try {
-                val prompt = """
-                    You are Jarvis, a smart Android assistant.
-
-                    Convert the user's command into ONLY valid JSON.
-
-                    Available actions:
-                    open_app, web_search, open_url, youtube, spotify, maps, selfie, camera, chat
-
-                    Use:
-                    - open_app for opening installed apps
-                    - web_search for Google/browser search
-                    - open_url for websites
-                    - youtube for playing/searching video or song
-                    - spotify only if Spotify is mentioned
-                    - maps for location/navigation/nearby places
-                    - selfie for taking selfie/photo
-                    - camera for opening camera
-                    - chat for normal conversation
-
-                    Rules:
-                    - Return ONLY JSON.
-                    - No markdown.
-                    - No explanation.
-                    - For Hinglish/Hindi, understand meaning naturally.
-                    - Keep query short.
-
-                    JSON format:
-                    {"action":"youtube","query":"Arijit Singh sad song","reply":"Playing Arijit Singh sad song on YouTube"}
-
-                    User command: $command
-                """.trimIndent()
-
-                val requestJson = JSONObject()
-                val contents = JSONArray()
-                val contentObj = JSONObject()
-                val parts = JSONArray()
-                val partObj = JSONObject()
-
-                partObj.put("text", prompt)
-                parts.put(partObj)
-                contentObj.put("parts", parts)
-                contents.put(contentObj)
-                requestJson.put("contents", contents)
-
-                val url = URL(
-                    "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=$geminiKey"
+                val reply = callChatApi(
+                    endpoint = "https://openrouter.ai/api/v1/chat/completions",
+                    key = key,
+                    model = "openrouter/auto",
+                    command = command,
+                    isOpenRouter = true
                 )
 
-                val connection = url.openConnection() as HttpURLConnection
-                connection.requestMethod = "POST"
-                connection.setRequestProperty("Content-Type", "application/json")
-                connection.doOutput = true
-
-                connection.outputStream.use {
-                    it.write(requestJson.toString().toByteArray())
-                }
-
-                val responseCode = connection.responseCode
-
-                val responseText = if (responseCode in 200..299) {
-                    connection.inputStream.bufferedReader().readText()
-                } else {
-                    val err = connection.errorStream?.bufferedReader()?.readText() ?: "Unknown error"
-                    throw Exception("HTTP $responseCode")
-                }
-
-                val json = JSONObject(responseText)
-
-                var text = json
-                    .getJSONArray("candidates")
-                    .getJSONObject(0)
-                    .getJSONObject("content")
-                    .getJSONArray("parts")
-                    .getJSONObject(0)
-                    .getString("text")
-                    .trim()
-
-                text = text
-                    .replace("```json", "")
-                    .replace("```", "")
-                    .trim()
-
-                try {
-                    val actionJson = JSONObject(text)
-                    runOnUiThread {
-                        runGeminiAction(actionJson)
-                    }
-                } catch (e: Exception) {
-                    runOnUiThread {
-                        statusText.text = "Jarvis replied"
-                        addChat("Jarvis", text)
-                        speak(text)
-                    }
-                }
-
-            } catch (e: Exception) {
                 runOnUiThread {
-                    statusText.text = "Gemini error"
-                    addChat("Jarvis", "Gemini error. Check API key, internet, or model access.")
-                    speak("Gemini error. Check API key or internet.")
+                    statusText.text = "Jarvis replied"
+                    addChat("Jarvis", reply)
+                    speak(reply)
+                }
+            } catch (e: Exception) {
+                val groqKey = prefs.getString("groq_key", "") ?: ""
+                if (groqKey.isNotBlank()) {
+                    askGroq(command, groqKey)
+                } else {
+                    runOnUiThread {
+                        val msg = "OpenRouter error. Add Groq key as backup."
+                        statusText.text = "AI chat error"
+                        addChat("Jarvis", msg)
+                        speak(msg)
+                    }
                 }
             }
         }
     }
 
-    private fun runGeminiAction(json: JSONObject) {
-        val action = json.optString("action", "chat")
-        val query = json.optString("query", "")
-        val reply = json.optString("reply", "")
+    private fun askGroq(command: String, key: String) {
+        statusText.text = "Thinking with Groq..."
 
-        if (reply.isNotBlank()) {
-            addChat("Jarvis", reply)
-            speak(reply)
+        thread {
+            try {
+                val reply = callChatApi(
+                    endpoint = "https://api.groq.com/openai/v1/chat/completions",
+                    key = key,
+                    model = "llama-3.3-70b-versatile",
+                    command = command,
+                    isOpenRouter = false
+                )
+
+                runOnUiThread {
+                    statusText.text = "Jarvis replied"
+                    addChat("Jarvis", reply)
+                    speak(reply)
+                }
+            } catch (e: Exception) {
+                runOnUiThread {
+                    val msg = "AI chat error. Basic commands still work."
+                    statusText.text = "AI chat error"
+                    addChat("Jarvis", msg)
+                    speak(msg)
+                }
+            }
+        }
+    }
+
+    private fun callChatApi(
+        endpoint: String,
+        key: String,
+        model: String,
+        command: String,
+        isOpenRouter: Boolean
+    ): String {
+        val requestJson = JSONObject()
+        requestJson.put("model", model)
+
+        val messages = JSONArray()
+
+        val systemMsg = JSONObject()
+        systemMsg.put("role", "system")
+        systemMsg.put(
+            "content",
+            "You are JARVIS, a helpful Hinglish Android assistant. Reply short, natural, friendly, and useful."
+        )
+
+        val userMsg = JSONObject()
+        userMsg.put("role", "user")
+        userMsg.put("content", command)
+
+        messages.put(systemMsg)
+        messages.put(userMsg)
+
+        requestJson.put("messages", messages)
+        requestJson.put("temperature", 0.7)
+
+        val url = URL(endpoint)
+        val connection = url.openConnection() as HttpURLConnection
+        connection.requestMethod = "POST"
+        connection.setRequestProperty("Content-Type", "application/json")
+        connection.setRequestProperty("Authorization", "Bearer $key")
+
+        if (isOpenRouter) {
+            connection.setRequestProperty("HTTP-Referer", "https://github.com/RudranshPandey108/Jarvisnative")
+            connection.setRequestProperty("X-Title", "JARVIS Android")
         }
 
-        when (action) {
-            "youtube" -> playOnYouTube(query)
-            "spotify" -> playOnSpotify(query)
-            "open_app" -> openApp(query)
-            "web_search" -> openWebSearch(query)
-            "open_url" -> openUrl(query)
-            "maps" -> openMaps(query)
-            "camera" -> openApp("camera")
-            "selfie" -> openCameraSelfie()
-            "chat" -> {
-                val message = reply.ifBlank { "I am here, sir." }
-                if (reply.isBlank()) {
-                    addChat("Jarvis", message)
-                    speak(message)
-                }
-                statusText.text = "Jarvis replied"
-            }
-            else -> {
-                statusText.text = "Unknown action"
-                speak("I did not understand that action")
-            }
+        connection.doOutput = true
+
+        connection.outputStream.use {
+            it.write(requestJson.toString().toByteArray())
+        }
+
+        val responseCode = connection.responseCode
+
+        val responseText = if (responseCode in 200..299) {
+            connection.inputStream.bufferedReader().readText()
+        } else {
+            throw Exception("HTTP $responseCode")
+        }
+
+        val json = JSONObject(responseText)
+
+        return json
+            .getJSONArray("choices")
+            .getJSONObject(0)
+            .getJSONObject("message")
+            .getString("content")
+            .trim()
+    }
+
+    private fun extractPhoneNumber(text: String): String {
+        val regex = Regex("\\d{10,13}")
+        return regex.find(text)?.value ?: ""
+    }
+
+    private fun openDialer(number: String) {
+        if (number.isBlank()) {
+            speak("Please say the phone number")
+            return
+        }
+
+        val intent = Intent(Intent.ACTION_DIAL)
+        intent.data = Uri.parse("tel:$number")
+        startActivity(intent)
+    }
+
+    private fun openSms(text: String) {
+        val number = extractPhoneNumber(text)
+        val message = text.replace(number, "").trim()
+
+        if (number.isBlank()) {
+            speak("Please say the phone number")
+            return
+        }
+
+        val intent = Intent(Intent.ACTION_SENDTO)
+        intent.data = Uri.parse("smsto:$number")
+        intent.putExtra("sms_body", message)
+        startActivity(intent)
+    }
+
+    private fun openWhatsApp(text: String) {
+        val number = extractPhoneNumber(text)
+        val message = text.replace(number, "").trim()
+
+        if (number.isBlank()) {
+            openApp("whatsapp")
+            return
+        }
+
+        val cleanNumber = if (number.length == 10) "91$number" else number
+
+        val url = "https://wa.me/$cleanNumber?text=${Uri.encode(message)}"
+        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
+
+        try {
+            intent.setPackage("com.whatsapp")
+            startActivity(intent)
+        } catch (e: Exception) {
+            startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
         }
     }
 
@@ -777,14 +796,12 @@ normalized.contains("whatsapp message") -> {
     }
 
     private fun playOnYouTube(song: String) {
-        val youtubeKey = prefs.getString("youtube_key", "") ?: ""
-
         if (song.isBlank()) {
             speak("Please say the song name")
             return
         }
 
-        if (youtubeKey.isBlank()) {
+        if (YOUTUBE_API_KEY == "PASTE_YOUR_YOUTUBE_API_KEY_HERE") {
             val url = "https://www.youtube.com/results?search_query=${Uri.encode(song)}"
             startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
             return
@@ -797,7 +814,7 @@ normalized.contains("whatsapp message") -> {
                 val apiUrl =
                     "https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&maxResults=1&q=${
                         Uri.encode(song)
-                    }&key=$youtubeKey"
+                    }&key=$YOUTUBE_API_KEY"
 
                 val response = URL(apiUrl).readText()
                 val json = JSONObject(response)
