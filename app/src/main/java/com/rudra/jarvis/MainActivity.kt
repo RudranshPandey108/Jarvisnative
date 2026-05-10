@@ -1,6 +1,8 @@
 package com.rudra.jarvis
 import java.net.URL
 import org.json.JSONObject
+import java.io.BufferedReader
+import java.io.InputStreamReader
 import kotlin.concurrent.thread
 import android.graphics.drawable.GradientDrawable
 import android.view.View
@@ -419,20 +421,29 @@ User command: $command
             requestJson.put("contents", contents)
 
             val url = URL(
-                "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=$geminiKey"
-            )
+    "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent"
+)
 
             val connection = url.openConnection() as java.net.HttpURLConnection
             connection.requestMethod = "POST"
-            connection.setRequestProperty("Content-Type", "application/json")
-            connection.doOutput = true
+connection.setRequestProperty("Content-Type", "application/json")
+connection.setRequestProperty("x-goog-api-key", geminiKey)
+connection.doOutput = true
 
             connection.outputStream.use {
                 it.write(requestJson.toString().toByteArray())
             }
 
-            val response = connection.inputStream.bufferedReader().readText()
-            val json = JSONObject(response)
+            val code = connection.responseCode
+
+val response = if (code in 200..299) {
+    connection.inputStream.bufferedReader().readText()
+} else {
+    val errorText = connection.errorStream?.bufferedReader()?.readText() ?: "Unknown API error"
+    throw Exception("HTTP $code: $errorText")
+}
+
+val json = JSONObject(response)
 
             var text = json
                 .getJSONArray("candidates")
@@ -464,11 +475,11 @@ User command: $command
     }
 }
 
-        } catch (e: Exception) {
+} catch (e: Exception) {
     runOnUiThread {
-        statusText.text = "Gemini error: ${e.message}"
-        addChat("Jarvis", "Gemini error: ${e.message}")
-        speak("Sorry, Gemini se response nahi aaya")
+        statusText.text = "Gemini error"
+        addChat("Jarvis", "Gemini error. Check API key, internet, or model access.")
+        speak("Gemini error. Check API key or internet.")
     }
         }
     }
