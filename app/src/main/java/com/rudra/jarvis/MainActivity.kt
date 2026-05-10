@@ -1071,7 +1071,9 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
     }
 
     
-
+private fun playOnSpotify(song: String) {
+    playOnSpotifyAuto(song)
+}
     override fun onInit(status: Int) {
         if (status == TextToSpeech.SUCCESS) {
             tts.language = Locale("en", "IN")
