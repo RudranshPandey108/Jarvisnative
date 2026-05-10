@@ -331,6 +331,63 @@ if (intent.getBooleanExtra("wake_word_detected", false)) {
         statusText.text = "Waiting for Hey Jarvis"
         if (continuousMode) startVoiceInput()
     }
+    private fun extractPhoneNumber(text: String): String {
+    val regex = Regex("\\d{10,13}")
+    return regex.find(text)?.value ?: ""
+}
+
+private fun openDialer(number: String) {
+    if (number.isBlank()) {
+        speak("Please say the phone number")
+        return
+    }
+
+    val intent = Intent(Intent.ACTION_DIAL)
+    intent.data = Uri.parse("tel:$number")
+    startActivity(intent)
+}
+
+private fun openSms(text: String) {
+    val number = extractPhoneNumber(text)
+    val message = text.replace(number, "").trim()
+
+    if (number.isBlank()) {
+        speak("Please say the phone number")
+        return
+    }
+
+    val intent = Intent(Intent.ACTION_SENDTO)
+    intent.data = Uri.parse("smsto:$number")
+    intent.putExtra("sms_body", message)
+
+    startActivity(intent)
+}
+
+private fun openWhatsApp(text: String) {
+    val number = extractPhoneNumber(text)
+    val message = text.replace(number, "").trim()
+
+    if (number.isBlank()) {
+        openApp("whatsapp")
+        return
+    }
+
+    val cleanNumber = if (number.length == 10) {
+        "91$number"
+    } else {
+        number
+    }
+
+    val url = "https://wa.me/$cleanNumber?text=${Uri.encode(message)}"
+    val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
+
+    try {
+        intent.setPackage("com.whatsapp")
+        startActivity(intent)
+    } catch (e: Exception) {
+        startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
+    }
+}
 
 private fun handleCommand(command: String) {
     val normalized = command.lowercase()
@@ -386,6 +443,35 @@ private fun handleCommand(command: String) {
             openCameraSelfie()
             return
         }
+        normalized.startsWith("call ") ||
+normalized.contains("phone lagao") ||
+normalized.contains("call karo") -> {
+    val number = extractPhoneNumber(normalized)
+    openDialer(number)
+    return
+}
+
+normalized.startsWith("message ") ||
+normalized.startsWith("sms ") -> {
+    val text = normalized
+        .replace("message", "")
+        .replace("sms", "")
+        .trim()
+
+    openSms(text)
+    return
+}
+
+normalized.startsWith("whatsapp ") ||
+normalized.contains("whatsapp message") -> {
+    val text = normalized
+        .replace("whatsapp message", "")
+        .replace("whatsapp", "")
+        .trim()
+
+    openWhatsApp(text)
+    return
+}
 
         normalized.contains("go back") ||
         normalized.contains("back jao") ||
