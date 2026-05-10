@@ -488,7 +488,6 @@ private fun downloadLastImage() {
 
         when {
             // Image generation command FIRST
-if (
 normalized.contains("image") ||
 normalized.contains("photo") ||
 normalized.contains("wallpaper") ||
