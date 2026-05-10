@@ -1,4 +1,5 @@
 package com.rudra.jarvis
+import android.os.Build
 
 import android.Manifest
 import android.app.Activity
@@ -135,6 +136,21 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
                 speak("Continuous mode off")
             }
         }
+        val serviceButton = Button(this)
+serviceButton.text = "🚀 START JARVIS SERVICE"
+
+serviceButton.setOnClickListener {
+    val intent = Intent(this, JarvisService::class.java)
+
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+        startForegroundService(intent)
+    } else {
+        startService(intent)
+    }
+
+    statusText.text = "JARVIS service started"
+    speak("Jarvis service started")
+}
 
         val settingsButton = Button(this)
         settingsButton.text = "⚙ API KEY SETTINGS"
@@ -207,6 +223,7 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
         layout.addView(typedInput)
         layout.addView(sendButton)
         layout.addView(continuousButton)
+        layout.addView(serviceButton)
         layout.addView(settingsButton)
         layout.addView(geminiKeyInput)
         layout.addView(youtubeKeyInput)
