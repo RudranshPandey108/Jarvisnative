@@ -68,16 +68,26 @@
     android:foregroundServiceType="microphone" />
         
 
-        <activity
-            android:name=".MainActivity"
-            android:exported="true">
+ <activity
+    android:name=".MainActivity"
+    android:exported="true">
 
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
+    <intent-filter>
+        <action android:name="android.intent.action.MAIN" />
+        <category android:name="android.intent.category.LAUNCHER" />
+    </intent-filter>
 
-        </activity>
+    <intent-filter>
+        <action android:name="android.intent.action.ASSIST" />
+        <category android:name="android.intent.category.DEFAULT" />
+    </intent-filter>
+
+    <intent-filter>
+        <action android:name="android.intent.action.VOICE_COMMAND" />
+        <category android:name="android.intent.category.DEFAULT" />
+    </intent-filter>
+
+</activity>
 
     </application>
 
