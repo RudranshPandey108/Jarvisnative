@@ -6,7 +6,7 @@ import android.graphics.drawable.GradientDrawable
 import android.view.View
 import android.content.SharedPreferences
 import android.text.InputType
-
+import android.text.method.ScrollingMovementMethod
 import android.Manifest
 import android.app.Activity
 import android.content.ActivityNotFoundException
@@ -28,6 +28,10 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
 
     private lateinit var statusText: TextView
     private lateinit var commandText: TextView
+    private lateinit var chatBox: TextView
+private lateinit var typedInput: EditText
+private var continuousMode = false
+private var waitingForWakeCommand = false
     private lateinit var tts: TextToSpeech
     
 private lateinit var prefs: SharedPreferences
@@ -76,12 +80,54 @@ private lateinit var geminiKeyInput: EditText
     commandText.gravity = Gravity.CENTER
     commandText.setPadding(0, 0, 0, 35)
 
+    chatBox = TextView(this)
+chatBox.text = "Chat started...\n"
+chatBox.textSize = 14f
+chatBox.setTextColor(Color.LTGRAY)
+chatBox.setPadding(20, 20, 20, 20)
+chatBox.movementMethod = ScrollingMovementMethod()
+
     val micButton = Button(this)
     micButton.text = "🎙  SPEAK TO JARVIS"
     micButton.textSize = 18f
     micButton.setTextColor(Color.WHITE)
     micButton.setPadding(30, 22, 30, 22)
+    typedInput = EditText(this)
+typedInput.hint = "Type your message..."
+typedInput.setTextColor(Color.WHITE)
+typedInput.setHintTextColor(Color.GRAY)
+typedInput.inputType = InputType.TYPE_CLASS_TEXT
 
+val sendButton = Button(this)
+sendButton.text = "SEND TO JARVIS"
+
+sendButton.setOnClickListener {
+    val text = typedInput.text.toString().trim()
+
+    if (text.isNotBlank()) {
+        addChat("You", text)
+        typedInput.setText("")
+        handleCommand(text)
+    }
+}
+
+val continuousButton = Button(this)
+continuousButton.text = "🎧 CONTINUOUS MODE: OFF"
+
+continuousButton.setOnClickListener {
+    continuousMode = !continuousMode
+
+    if (continuousMode) {
+        continuousButton.text = "🎧 CONTINUOUS MODE: ON"
+        statusText.text = "Say Hey Jarvis"
+        speak("Continuous mode on. Say Hey Jarvis")
+        startVoiceInput()
+    } else {
+        continuousButton.text = "🎧 CONTINUOUS MODE: OFF"
+        statusText.text = "Continuous mode off"
+        speak("Continuous mode off")
+    }
+}
     val btnBg = GradientDrawable()
     btnBg.cornerRadius = 45f
     btnBg.setColor(Color.rgb(0, 120, 140))
@@ -157,6 +203,10 @@ private lateinit var geminiKeyInput: EditText
     layout.addView(statusText)
     layout.addView(commandText)
     layout.addView(micButton)
+    layout.addView(chatBox)
+layout.addView(typedInput)
+layout.addView(sendButton)
+layout.addView(continuousButton)
     layout.addView(settingsButton)
     layout.addView(geminiKeyInput)
     layout.addView(saveKeyButton)
@@ -218,17 +268,28 @@ private lateinit var geminiKeyInput: EditText
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
+    super.onActivityResult(requestCode, resultCode, data)
 
-        if (requestCode == speechRequestCode && resultCode == RESULT_OK) {
-            val result = data?.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)
-            val command = result?.get(0)?.lowercase(Locale.getDefault()) ?: ""
+    if (requestCode == speechRequestCode && resultCode == RESULT_OK) {
+        val result = data?.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)
+        val command = result?.get(0)?.lowercase(Locale.getDefault()) ?: ""
 
-            commandText.text = "You said: $command"
-            handleCommand(command)
+        commandText.text = "You said: $command"
+
+        if (continuousMode) {
+            handleContinuousCommand(command)
         } else {
-            statusText.text = "No command received"
+            addChat("You", command)
+            handleCommand(command)
         }
+
+    } else {
+        statusText.text = "No command received"
+
+        if (continuousMode) {
+            startVoiceInput()
+        }
+    }
     }
 
     private fun handleCommand(command: String) {
@@ -243,6 +304,37 @@ private lateinit var geminiKeyInput: EditText
         .replace("सेटिंग", "settings")
 
     askGeminiForAction(normalized)
+    }
+    private fun addChat(sender: String, message: String) {
+    chatBox.append("\n$sender: $message\n")
+    }
+    private fun handleContinuousCommand(command: String) {
+
+    if (command.contains("hey jarvis") || command.contains("hello jarvis")) {
+        waitingForWakeCommand = true
+        statusText.text = "Jarvis activated"
+        speak("Yes sir")
+        startVoiceInput()
+        return
+    }
+
+    if (waitingForWakeCommand) {
+        waitingForWakeCommand = false
+        addChat("You", command)
+        handleCommand(command)
+
+        if (continuousMode) {
+            startVoiceInput()
+        }
+
+        return
+    }
+
+    statusText.text = "Waiting for Hey Jarvis"
+
+    if (continuousMode) {
+        startVoiceInput()
+    }
     }
     private fun askGeminiForAction(command: String) {
 
@@ -345,8 +437,8 @@ private lateinit var geminiKeyInput: EditText
     val reply = json.optString("reply", "")
 
     if (reply.isNotBlank()) {
-        speak(reply)
-    }
+    addChat("Jarvis", reply)
+}
 
     when (action) {
 
