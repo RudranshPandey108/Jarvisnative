@@ -1,5 +1,8 @@
 package com.rudra.jarvis
-
+import android.graphics.BitmapFactory
+import android.os.Environment
+import java.io.File
+import java.io.FileOutputStream
 import android.Manifest
 import android.app.Activity
 import android.content.ActivityNotFoundException
@@ -35,6 +38,10 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
     private lateinit var statusText: TextView
     private lateinit var commandText: TextView
     private lateinit var chatBox: TextView
+    private lateinit var imageView: ImageView
+private lateinit var imagePromptText: TextView
+private var lastImageUrl: String = ""
+private val imageHistory = mutableListOf<String>()
     private lateinit var typedInput: EditText
     private lateinit var openRouterKeyInput: EditText
     private lateinit var groqKeyInput: EditText
@@ -104,6 +111,47 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
         chatBox.setTextColor(Color.LTGRAY)
         chatBox.setPadding(20, 25, 20, 20)
         chatBox.movementMethod = ScrollingMovementMethod()
+        imagePromptText = TextView(this)
+imagePromptText.text = "AI Image Studio ready"
+imagePromptText.textSize = 14f
+imagePromptText.setTextColor(Color.CYAN)
+imagePromptText.gravity = Gravity.CENTER
+imagePromptText.setPadding(0, 20, 0, 10)
+
+imageView = ImageView(this)
+imageView.adjustViewBounds = true
+imageView.setBackgroundColor(Color.rgb(10, 12, 30))
+imageView.setPadding(8, 8, 8, 8)
+
+val openImageButton = Button(this)
+openImageButton.text = "OPEN FULL IMAGE"
+openImageButton.setOnClickListener {
+    if (lastImageUrl.isNotBlank()) {
+        startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(lastImageUrl)))
+    } else {
+        speak("No image generated yet")
+    }
+}
+
+val downloadImageButton = Button(this)
+downloadImageButton.text = "DOWNLOAD IMAGE"
+downloadImageButton.setOnClickListener {
+    if (lastImageUrl.isNotBlank()) {
+        downloadLastImage()
+    } else {
+        speak("No image generated yet")
+    }
+}
+
+val historyButton = Button(this)
+historyButton.text = "IMAGE HISTORY"
+historyButton.setOnClickListener {
+    if (imageHistory.isEmpty()) {
+        addChat("Jarvis", "No image history yet.")
+    } else {
+        addChat("Image History", imageHistory.joinToString("\n\n"))
+    }
+}
 
         typedInput = EditText(this)
         typedInput.hint = "Type your message..."
@@ -231,6 +279,11 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
         layout.addView(commandText)
         layout.addView(micButton)
         layout.addView(chatBox)
+        layout.addView(imagePromptText)
+layout.addView(imageView)
+layout.addView(openImageButton)
+layout.addView(downloadImageButton)
+layout.addView(historyButton)
         layout.addView(typedInput)
         layout.addView(sendButton)
         layout.addView(continuousButton)
@@ -316,6 +369,75 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
             speak("Speech recognition is not available")
         }
     }
+    private fun generateAIImage(prompt: String) {
+    if (prompt.isBlank()) {
+        speak("Please say image prompt")
+        return
+    }
+
+    statusText.text = "Generating image..."
+    imagePromptText.text = "Prompt: $prompt"
+    speak("Generating image")
+
+    val cleanPrompt = "$prompt, ultra detailed, cinematic, high quality"
+    val seed = System.currentTimeMillis() % 100000
+
+    val imageUrl =
+        "https://image.pollinations.ai/prompt/${Uri.encode(cleanPrompt)}?width=1024&height=1024&seed=$seed&nologo=true&safe=true"
+
+    lastImageUrl = imageUrl
+    imageHistory.add(0, prompt)
+
+    thread {
+        try {
+            val input = URL(imageUrl).openStream()
+            val bitmap = BitmapFactory.decodeStream(input)
+
+            runOnUiThread {
+                imageView.setImageBitmap(bitmap)
+                statusText.text = "Image ready"
+                addChat("Jarvis", "Image generated: $prompt")
+                speak("Image ready")
+            }
+        } catch (e: Exception) {
+            runOnUiThread {
+                statusText.text = "Image error"
+                addChat("Jarvis", "Image generation failed. Opening in browser.")
+                startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(imageUrl)))
+            }
+        }
+    }
+}
+
+private fun downloadLastImage() {
+    thread {
+        try {
+            val input = URL(lastImageUrl).openStream()
+            val picturesDir = getExternalFilesDir(Environment.DIRECTORY_PICTURES)
+
+            val file = File(
+                picturesDir,
+                "jarvis_image_${System.currentTimeMillis()}.png"
+            )
+
+            val output = FileOutputStream(file)
+            input.copyTo(output)
+            output.close()
+            input.close()
+
+            runOnUiThread {
+                statusText.text = "Image downloaded"
+                addChat("Jarvis", "Saved image: ${file.absolutePath}")
+                speak("Image downloaded")
+            }
+        } catch (e: Exception) {
+            runOnUiThread {
+                statusText.text = "Download failed"
+                speak("Download failed")
+            }
+        }
+    }
+}
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
@@ -380,6 +502,22 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
                 openWebSearch(q)
                 return
             }
+            normalized.contains("image banao") ||
+normalized.contains("photo banao") ||
+normalized.contains("wallpaper banao") ||
+normalized.contains("generate image") ||
+normalized.contains("ai image") -> {
+    val prompt = normalized
+        .replace("image banao", "")
+        .replace("photo banao", "")
+        .replace("wallpaper banao", "")
+        .replace("generate image", "")
+        .replace("ai image", "")
+        .trim()
+
+    generateAIImage(prompt)
+    return
+}
 
             normalized.contains("youtube") ||
             normalized.contains("chalao") ||
