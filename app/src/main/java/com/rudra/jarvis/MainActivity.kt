@@ -487,17 +487,27 @@ private fun downloadLastImage() {
         val normalized = normalizeCommand(command)
 
         when {
-            normalized.contains("image banao") ||
-normalized.contains("photo banao") ||
-normalized.contains("wallpaper banao") ||
-normalized.contains("generate image") ||
-normalized.contains("ai image") -> {
+            // Image generation command FIRST
+if (
+    normalized.contains("image") ||
+    normalized.contains("photo") ||
+    normalized.contains("wallpaper") ||
+    normalized.contains("picture") ||
+    normalized.contains("banao") ||
+    normalized.contains("bnado") ||
+    normalized.contains("generate")
+) {
     val prompt = normalized
-        .replace("image banao", "")
-        .replace("photo banao", "")
-        .replace("wallpaper banao", "")
-        .replace("generate image", "")
-        .replace("ai image", "")
+        .replace("generate", "")
+        .replace("an", "")
+        .replace("a", "")
+        .replace("image", "")
+        .replace("photo", "")
+        .replace("wallpaper", "")
+        .replace("picture", "")
+        .replace("banao", "")
+        .replace("bnado", "")
+        .replace("of", "")
         .trim()
 
     generateAIImage(prompt)
