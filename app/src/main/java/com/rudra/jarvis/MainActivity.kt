@@ -442,6 +442,68 @@ private fun downloadLastImage() {
     }
 }
 
+private fun playOnSpotube(song: String) {
+    if (song.isBlank()) {
+        speak("Please say the song name")
+        return
+    }
+
+    statusText.text = "Opening Spotube for $song"
+    speak("Opening $song on Spotube")
+
+    val packages = listOf(
+        "oss.krtirtho.spotube",
+        "com.github.krtirtho.spotube",
+        "com.krtirtho.spotube"
+    )
+
+    val spotifySearchUrl =
+        "https://open.spotify.com/search/${Uri.encode(song)}"
+
+    for (pkg in packages) {
+        try {
+            val intent = Intent(Intent.ACTION_VIEW, Uri.parse(spotifySearchUrl))
+            intent.setPackage(pkg)
+            startActivity(intent)
+            return
+        } catch (_: Exception) {
+        }
+    }
+
+    openApp("spotube")
+}
+
+private fun playOnRiMusic(song: String) {
+    if (song.isBlank()) {
+        speak("Please say the song name")
+        return
+    }
+
+    statusText.text = "Opening RiMusic for $song"
+    speak("Opening $song on RiMusic")
+
+    val packages = listOf(
+        "it.fast4x.rimusic",
+        "com.fast4x.rimusic",
+        "com.rimusic",
+        "fast4x.rimusic"
+    )
+
+    val ytMusicUrl =
+        "https://music.youtube.com/search?q=${Uri.encode(song)}"
+
+    for (pkg in packages) {
+        try {
+            val intent = Intent(Intent.ACTION_VIEW, Uri.parse(ytMusicUrl))
+            intent.setPackage(pkg)
+            startActivity(intent)
+            return
+        } catch (_: Exception) {
+        }
+    }
+
+    openApp("rimusic")
+}
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
 
@@ -527,6 +589,43 @@ normalized.contains("generate") -> {
                 openWebSearch(q)
                 return
             }
+            normalized.contains("spotube") -> {
+    val q = normalized
+        .replace("spotube", "")
+        .replace("play", "")
+        .replace("chalao", "")
+        .replace("gana", "")
+        .replace("song", "")
+        .replace("music", "")
+        .replace("pe", "")
+        .replace("par", "")
+        .trim()
+
+    playOnSpotube(q)
+    return
+}
+
+normalized.contains("rimusic") ||
+normalized.contains("ri music") ||
+normalized.contains("yt music") ||
+normalized.contains("youtube music") -> {
+    val q = normalized
+        .replace("rimusic", "")
+        .replace("ri music", "")
+        .replace("yt music", "")
+        .replace("youtube music", "")
+        .replace("play", "")
+        .replace("chalao", "")
+        .replace("gana", "")
+        .replace("song", "")
+        .replace("music", "")
+        .replace("pe", "")
+        .replace("par", "")
+        .trim()
+
+    playOnRiMusic(q)
+    return
+}
             
 
             normalized.contains("youtube") ||
