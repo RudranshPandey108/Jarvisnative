@@ -300,17 +300,64 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
     }
 
     private fun handleCommand(command: String) {
-        val normalized = command.lowercase()
-            .replace("ओपन", "open")
-            .replace("व्हाट्सएप", "whatsapp")
-            .replace("यूट्यूब", "youtube")
-            .replace("स्पॉटिफाई", "spotify")
-            .replace("कैमरा", "camera")
-            .replace("सेटिंग", "settings")
+    val normalized = command.lowercase()
+        .replace("ओपन", "open")
+        .replace("व्हाट्सएप", "whatsapp")
+        .replace("यूट्यूब", "youtube")
+        .replace("स्पॉटिफाई", "spotify")
+        .replace("कैमरा", "camera")
+        .replace("सेटिंग", "settings")
 
-        askGeminiForAction(normalized)
+    // Basic offline commands first
+    when {
+        normalized.startsWith("open ") -> {
+            val app = normalized.replace("open", "").trim()
+            openApp(app)
+            return
+        }
+
+        normalized.contains("google") && normalized.contains("search") -> {
+            val q = normalized
+                .replace("google", "")
+                .replace("pe", "")
+                .replace("par", "")
+                .replace("search", "")
+                .replace("karo", "")
+                .replace("kar", "")
+                .trim()
+
+            openWebSearch(q)
+            return
+        }
+
+        normalized.contains("youtube") || normalized.contains("chalao") || normalized.contains("gana") -> {
+            val q = normalized
+                .replace("youtube", "")
+                .replace("pe", "")
+                .replace("par", "")
+                .replace("play", "")
+                .replace("chalao", "")
+                .replace("gana", "")
+                .trim()
+
+            playOnYouTube(q)
+            return
+        }
+
+        normalized.contains("camera") || normalized.contains("कैमरा") -> {
+            openApp("camera")
+            return
+        }
+
+        normalized.contains("selfie") -> {
+            openCameraSelfie()
+            return
+        }
     }
 
+    // Only normal chat goes to Gemini
+    askGeminiForAction(normalized)
+    }
     private fun addChat(sender: String, message: String) {
         chatBox.append("\n$sender: $message\n")
     }
