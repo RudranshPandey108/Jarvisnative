@@ -241,10 +241,16 @@ accessibilityButton.setOnClickListener {
 
         setContentView(layout)
 
-if (intent.getBooleanExtra("wake_word_detected", false)) {
+val launchedAsAssistant =
+    intent.action == Intent.ACTION_ASSIST ||
+    intent.action == Intent.ACTION_VOICE_COMMAND ||
+    intent.getBooleanExtra("wake_word_detected", false)
+
+if (launchedAsAssistant) {
     statusText.text = "Jarvis activated"
     addChat("Jarvis", "Yes sir, I am listening.")
     speak("Yes sir, I am listening.")
+    checkMicPermissionAndListen()
 } else {
     speak("Jarvis online")
 }
