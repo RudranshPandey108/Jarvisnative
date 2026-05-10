@@ -487,6 +487,22 @@ private fun downloadLastImage() {
         val normalized = normalizeCommand(command)
 
         when {
+            normalized.contains("image banao") ||
+normalized.contains("photo banao") ||
+normalized.contains("wallpaper banao") ||
+normalized.contains("generate image") ||
+normalized.contains("ai image") -> {
+    val prompt = normalized
+        .replace("image banao", "")
+        .replace("photo banao", "")
+        .replace("wallpaper banao", "")
+        .replace("generate image", "")
+        .replace("ai image", "")
+        .trim()
+
+    generateAIImage(prompt)
+    return
+}
             normalized.startsWith("open ") -> {
                 val app = normalized.replace("open", "").trim()
                 openApp(app)
@@ -505,22 +521,7 @@ private fun downloadLastImage() {
                 openWebSearch(q)
                 return
             }
-            normalized.contains("image banao") ||
-normalized.contains("photo banao") ||
-normalized.contains("wallpaper banao") ||
-normalized.contains("generate image") ||
-normalized.contains("ai image") -> {
-    val prompt = normalized
-        .replace("image banao", "")
-        .replace("photo banao", "")
-        .replace("wallpaper banao", "")
-        .replace("generate image", "")
-        .replace("ai image", "")
-        .trim()
-
-    generateAIImage(prompt)
-    return
-}
+            
 
             normalized.contains("youtube") ||
             normalized.contains("chalao") ||
