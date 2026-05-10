@@ -686,12 +686,18 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
         val service = JarvisAccessibilityService.instance
         if (service == null) {
             speak("Please enable Jarvis accessibility service")
-            openApp("rimusic")
+            
             return
         }
 
         speak("Playing $song on RiMusic")
-        openApp("rimusic")
+        try {
+    val intent = packageManager.getLaunchIntentForPackage("it.fast4x.rimusic")
+    startActivity(intent)
+} catch (e: Exception) {
+    speak("RiMusic not installed")
+    return
+}
 
         Handler(Looper.getMainLooper()).postDelayed({
             service.tapPercent(0.85f, 0.08f)
