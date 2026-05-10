@@ -489,18 +489,15 @@ private fun downloadLastImage() {
         when {
             // Image generation command FIRST
 if (
-    normalized.contains("image") ||
-    normalized.contains("photo") ||
-    normalized.contains("wallpaper") ||
-    normalized.contains("picture") ||
-    normalized.contains("banao") ||
-    normalized.contains("bnado") ||
-    normalized.contains("generate")
-) {
+normalized.contains("image") ||
+normalized.contains("photo") ||
+normalized.contains("wallpaper") ||
+normalized.contains("picture") ||
+normalized.contains("banao") ||
+normalized.contains("bnado") ||
+normalized.contains("generate") -> {
     val prompt = normalized
         .replace("generate", "")
-        .replace("an", "")
-        .replace("a", "")
         .replace("image", "")
         .replace("photo", "")
         .replace("wallpaper", "")
