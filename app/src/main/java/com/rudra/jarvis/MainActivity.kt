@@ -1,4 +1,5 @@
 package com.rudra.jarvis
+import android.widget.ScrollView
 import android.graphics.BitmapFactory
 import android.os.Environment
 import java.io.File
@@ -295,7 +296,9 @@ layout.addView(historyButton)
         layout.addView(saveKeyButton)
         layout.addView(helpText)
 
-        setContentView(layout)
+        val scrollView = ScrollView(this)
+scrollView.addView(layout)
+setContentView(scrollView)
 
         val launchedAsAssistant =
             intent.action == Intent.ACTION_ASSIST ||
