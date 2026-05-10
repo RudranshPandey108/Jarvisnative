@@ -1,5 +1,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
-
+<uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+<uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
     <uses-permission android:name="android.permission.INTERNET" />
 
@@ -15,12 +17,18 @@
     </queries>
 
     <application
+        
+        
         android:theme="@style/AppTheme"
         android:label="JARVIS"
         android:icon="@mipmap/ic_launcher"
 
         android:allowBackup="true"
         android:supportsRtl="true">
+        <service
+    android:name=".JarvisService"
+    android:enabled="true"
+    android:exported="false" />
 
         <activity
             android:name=".MainActivity"
