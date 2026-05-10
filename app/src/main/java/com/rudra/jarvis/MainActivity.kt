@@ -231,7 +231,14 @@ serviceButton.setOnClickListener {
         layout.addView(helpText)
 
         setContentView(layout)
-        speak("Jarvis online")
+
+if (intent.getBooleanExtra("wake_word_detected", false)) {
+    statusText.text = "Jarvis activated"
+    addChat("Jarvis", "Yes sir, I am listening.")
+    speak("Yes sir, I am listening.")
+} else {
+    speak("Jarvis online")
+}
     }
 
     private fun roundedBg(color: Int, strokeColor: Int, radius: Float): GradientDrawable {
