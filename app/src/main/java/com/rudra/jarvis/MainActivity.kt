@@ -296,6 +296,22 @@ if (launchedAsAssistant) {
             speak("Speech recognition is not available")
         }
     }
+    override fun onNewIntent(intent: Intent?) {
+    super.onNewIntent(intent)
+    setIntent(intent)
+
+    val launchedAsAssistant =
+        intent?.action == Intent.ACTION_ASSIST ||
+        intent?.action == Intent.ACTION_VOICE_COMMAND ||
+        intent?.getBooleanExtra("wake_word_detected", false) == true
+
+    if (launchedAsAssistant) {
+        statusText.text = "Jarvis activated"
+        addChat("Jarvis", "Yes sir, I am listening.")
+        speak("Yes sir, I am listening.")
+        checkMicPermissionAndListen()
+    }
+    }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
