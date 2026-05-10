@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">JARVIS</string>
+    <string name="accessibility_description">JARVIS needs accessibility access to perform assistant actions like back, home, recent apps, scroll, and basic screen controls.</string>
+</resources>
