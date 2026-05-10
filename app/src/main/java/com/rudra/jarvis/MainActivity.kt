@@ -419,7 +419,7 @@ User command: $command
             requestJson.put("contents", contents)
 
             val url = URL(
-                "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=$geminiKey"
+                "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=$geminiKey"
             )
 
             val connection = url.openConnection() as java.net.HttpURLConnection
