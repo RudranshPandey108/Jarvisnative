@@ -151,6 +151,14 @@ serviceButton.setOnClickListener {
     statusText.text = "JARVIS service started"
     speak("Jarvis service started")
 }
+val accessibilityButton = Button(this)
+accessibilityButton.text = "♿ ENABLE ACCESSIBILITY"
+
+accessibilityButton.setOnClickListener {
+    val intent = Intent(android.provider.Settings.ACTION_ACCESSIBILITY_SETTINGS)
+    startActivity(intent)
+    speak("Enable Jarvis accessibility service")
+}
 
         val settingsButton = Button(this)
         settingsButton.text = "⚙ API KEY SETTINGS"
@@ -224,6 +232,7 @@ serviceButton.setOnClickListener {
         layout.addView(sendButton)
         layout.addView(continuousButton)
         layout.addView(serviceButton)
+        layout.addView(accessibilityButton)
         layout.addView(settingsButton)
         layout.addView(geminiKeyInput)
         layout.addView(youtubeKeyInput)
@@ -323,7 +332,7 @@ if (intent.getBooleanExtra("wake_word_detected", false)) {
         if (continuousMode) startVoiceInput()
     }
 
-    private fun handleCommand(command: String) {
+private fun handleCommand(command: String) {
     val normalized = command.lowercase()
         .replace("ओपन", "open")
         .replace("व्हाट्सएप", "whatsapp")
@@ -377,11 +386,63 @@ if (intent.getBooleanExtra("wake_word_detected", false)) {
             openCameraSelfie()
             return
         }
+
+        normalized.contains("go back") ||
+        normalized.contains("back jao") ||
+        normalized.contains("peeche jao") -> {
+            JarvisAccessibilityService.instance?.goBack()
+                ?: speak("Please enable Jarvis accessibility service")
+            return
+        }
+
+        normalized.contains("go home") ||
+        normalized.contains("home jao") ||
+        normalized.contains("home screen") -> {
+            JarvisAccessibilityService.instance?.goHome()
+                ?: speak("Please enable Jarvis accessibility service")
+            return
+        }
+
+        normalized.contains("recent") ||
+        normalized.contains("recent apps") -> {
+            JarvisAccessibilityService.instance?.openRecents()
+                ?: speak("Please enable Jarvis accessibility service")
+            return
+        }
+
+        normalized.contains("notification") ||
+        normalized.contains("notifications kholo") -> {
+            JarvisAccessibilityService.instance?.openNotifications()
+                ?: speak("Please enable Jarvis accessibility service")
+            return
+        }
+
+        normalized.contains("scroll down") ||
+        normalized.contains("neeche scroll") ||
+        normalized.contains("niche scroll") -> {
+            JarvisAccessibilityService.instance?.scrollDown()
+                ?: speak("Please enable Jarvis accessibility service")
+            return
+        }
+
+        normalized.contains("scroll up") ||
+        normalized.contains("upar scroll") -> {
+            JarvisAccessibilityService.instance?.scrollUp()
+                ?: speak("Please enable Jarvis accessibility service")
+            return
+        }
+
+        normalized.contains("tap center") ||
+        normalized.contains("beech mein tap") -> {
+            JarvisAccessibilityService.instance?.tapCenter()
+                ?: speak("Please enable Jarvis accessibility service")
+            return
+        }
     }
 
     // Only normal chat goes to Gemini
     askGeminiForAction(normalized)
-    }
+}
     private fun addChat(sender: String, message: String) {
         chatBox.append("\n$sender: $message\n")
     }
