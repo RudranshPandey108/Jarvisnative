@@ -27,6 +27,24 @@
         android:allowBackup="true"
         android:supportsRtl="true">
         <service
+    android:name=".JarvisVoiceInteractionService"
+    android:permission="android.permission.BIND_VOICE_INTERACTION"
+    android:exported="true">
+
+    <intent-filter>
+        <action android:name="android.service.voice.VoiceInteractionService" />
+    </intent-filter>
+
+    <meta-data
+        android:name="android.voice_interaction"
+        android:resource="@xml/jarvis_voice_interaction" />
+</service>
+
+<service
+    android:name=".JarvisVoiceSessionService"
+    android:permission="android.permission.BIND_VOICE_INTERACTION"
+    android:exported="true" />
+        <service
     android:name=".JarvisAccessibilityService"
     android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE"
     android:exported="true">
