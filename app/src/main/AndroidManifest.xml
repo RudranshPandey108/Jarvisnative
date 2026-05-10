@@ -13,14 +13,7 @@
             <category android:name="android.intent.category.LAUNCHER" />
         </intent>
 
-        <package android:name="oss.krtirtho.spotube" />
-        <package android:name="com.github.krtirtho.spotube" />
-        <package android:name="com.krtirtho.spotube" />
 
-        <package android:name="it.fast4x.rimusic" />
-        <package android:name="com.fast4x.rimusic" />
-        <package android:name="com.rimusic" />
-        <package android:name="fast4x.rimusic" />
 
         <package android:name="com.google.android.youtube" />
         <package android:name="com.spotify.music" />
