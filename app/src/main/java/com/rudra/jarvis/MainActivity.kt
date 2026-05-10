@@ -1070,9 +1070,7 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
         }
     }
 
-    private fun playOnSpotify(song: String) {
-        playOnSpotubeAuto(song)
-    }
+    
 
     override fun onInit(status: Int) {
         if (status == TextToSpeech.SUCCESS) {
