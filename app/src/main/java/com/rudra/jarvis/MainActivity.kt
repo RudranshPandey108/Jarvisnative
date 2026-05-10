@@ -1,20 +1,20 @@
 package com.rudra.jarvis
-import android.widget.ScrollView
-import android.graphics.BitmapFactory
-import android.os.Environment
-import java.io.File
-import java.io.FileOutputStream
+
 import android.Manifest
 import android.app.Activity
 import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.content.SharedPreferences
 import android.content.pm.PackageManager
+import android.graphics.BitmapFactory
 import android.graphics.Color
 import android.graphics.drawable.GradientDrawable
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.os.Environment
+import android.os.Handler
+import android.os.Looper
 import android.speech.RecognizerIntent
 import android.speech.tts.TextToSpeech
 import android.text.InputType
@@ -26,6 +26,8 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import org.json.JSONArray
 import org.json.JSONObject
+import java.io.File
+import java.io.FileOutputStream
 import java.net.HttpURLConnection
 import java.net.URL
 import java.util.Locale
@@ -33,21 +35,21 @@ import kotlin.concurrent.thread
 
 class MainActivity : Activity(), TextToSpeech.OnInitListener {
 
-    // YOUTUBE API KEY YAHAN PASTE KARO
     private val YOUTUBE_API_KEY = "AIzaSyAE7-4GLJQNAk5vxhPBCrRxB4pa85eg6gE"
 
     private lateinit var statusText: TextView
     private lateinit var commandText: TextView
     private lateinit var chatBox: TextView
     private lateinit var imageView: ImageView
-private lateinit var imagePromptText: TextView
-private var lastImageUrl: String = ""
-private val imageHistory = mutableListOf<String>()
+    private lateinit var imagePromptText: TextView
     private lateinit var typedInput: EditText
     private lateinit var openRouterKeyInput: EditText
     private lateinit var groqKeyInput: EditText
     private lateinit var tts: TextToSpeech
     private lateinit var prefs: SharedPreferences
+
+    private var lastImageUrl: String = ""
+    private val imageHistory = mutableListOf<String>()
 
     private var continuousMode = false
     private var waitingForWakeCommand = false
@@ -112,47 +114,48 @@ private val imageHistory = mutableListOf<String>()
         chatBox.setTextColor(Color.LTGRAY)
         chatBox.setPadding(20, 25, 20, 20)
         chatBox.movementMethod = ScrollingMovementMethod()
+
         imagePromptText = TextView(this)
-imagePromptText.text = "AI Image Studio ready"
-imagePromptText.textSize = 14f
-imagePromptText.setTextColor(Color.CYAN)
-imagePromptText.gravity = Gravity.CENTER
-imagePromptText.setPadding(0, 20, 0, 10)
+        imagePromptText.text = "AI Image Studio ready"
+        imagePromptText.textSize = 14f
+        imagePromptText.setTextColor(Color.CYAN)
+        imagePromptText.gravity = Gravity.CENTER
+        imagePromptText.setPadding(0, 20, 0, 10)
 
-imageView = ImageView(this)
-imageView.adjustViewBounds = true
-imageView.setBackgroundColor(Color.rgb(10, 12, 30))
-imageView.setPadding(8, 8, 8, 8)
+        imageView = ImageView(this)
+        imageView.adjustViewBounds = true
+        imageView.setBackgroundColor(Color.rgb(10, 12, 30))
+        imageView.setPadding(8, 8, 8, 8)
 
-val openImageButton = Button(this)
-openImageButton.text = "OPEN FULL IMAGE"
-openImageButton.setOnClickListener {
-    if (lastImageUrl.isNotBlank()) {
-        startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(lastImageUrl)))
-    } else {
-        speak("No image generated yet")
-    }
-}
+        val openImageButton = Button(this)
+        openImageButton.text = "OPEN FULL IMAGE"
+        openImageButton.setOnClickListener {
+            if (lastImageUrl.isNotBlank()) {
+                startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(lastImageUrl)))
+            } else {
+                speak("No image generated yet")
+            }
+        }
 
-val downloadImageButton = Button(this)
-downloadImageButton.text = "DOWNLOAD IMAGE"
-downloadImageButton.setOnClickListener {
-    if (lastImageUrl.isNotBlank()) {
-        downloadLastImage()
-    } else {
-        speak("No image generated yet")
-    }
-}
+        val downloadImageButton = Button(this)
+        downloadImageButton.text = "DOWNLOAD IMAGE"
+        downloadImageButton.setOnClickListener {
+            if (lastImageUrl.isNotBlank()) {
+                downloadLastImage()
+            } else {
+                speak("No image generated yet")
+            }
+        }
 
-val historyButton = Button(this)
-historyButton.text = "IMAGE HISTORY"
-historyButton.setOnClickListener {
-    if (imageHistory.isEmpty()) {
-        addChat("Jarvis", "No image history yet.")
-    } else {
-        addChat("Image History", imageHistory.joinToString("\n\n"))
-    }
-}
+        val historyButton = Button(this)
+        historyButton.text = "IMAGE HISTORY"
+        historyButton.setOnClickListener {
+            if (imageHistory.isEmpty()) {
+                addChat("Jarvis", "No image history yet.")
+            } else {
+                addChat("Image History", imageHistory.joinToString("\n\n"))
+            }
+        }
 
         typedInput = EditText(this)
         typedInput.hint = "Type your message..."
@@ -198,6 +201,7 @@ historyButton.setOnClickListener {
             } else {
                 startService(intent)
             }
+
             statusText.text = "JARVIS service started"
             speak("Jarvis service started")
         }
@@ -259,15 +263,15 @@ historyButton.setOnClickListener {
         helpText.text = """
             Try:
             
-            hi hello
-            google pe motu patlu search karo
             play channa mereya
+            play kesariya on spotube
+            play perfect on rimusic
+            google pe motu patlu search karo
             open whatsapp
             camera kholo
             take selfie
             maps pe lucknow railway station dikhao
-            call 9876543210
-            whatsapp 9876543210 hello
+            dog image banao
         """.trimIndent()
         helpText.textSize = 14f
         helpText.setTextColor(Color.GRAY)
@@ -281,10 +285,10 @@ historyButton.setOnClickListener {
         layout.addView(micButton)
         layout.addView(chatBox)
         layout.addView(imagePromptText)
-layout.addView(imageView)
-layout.addView(openImageButton)
-layout.addView(downloadImageButton)
-layout.addView(historyButton)
+        layout.addView(imageView)
+        layout.addView(openImageButton)
+        layout.addView(downloadImageButton)
+        layout.addView(historyButton)
         layout.addView(typedInput)
         layout.addView(sendButton)
         layout.addView(continuousButton)
@@ -297,8 +301,8 @@ layout.addView(historyButton)
         layout.addView(helpText)
 
         val scrollView = ScrollView(this)
-scrollView.addView(layout)
-setContentView(scrollView)
+        scrollView.addView(layout)
+        setContentView(scrollView)
 
         val launchedAsAssistant =
             intent.action == Intent.ACTION_ASSIST ||
@@ -372,138 +376,7 @@ setContentView(scrollView)
             speak("Speech recognition is not available")
         }
     }
-    private fun generateAIImage(prompt: String) {
-    if (prompt.isBlank()) {
-        speak("Please say image prompt")
-        return
-    }
 
-    statusText.text = "Generating image..."
-    imagePromptText.text = "Prompt: $prompt"
-    speak("Generating image")
-
-    val cleanPrompt = "$prompt, ultra detailed, cinematic, high quality"
-    val seed = System.currentTimeMillis() % 100000
-
-    val imageUrl =
-        "https://image.pollinations.ai/prompt/${Uri.encode(cleanPrompt)}?width=1024&height=1024&seed=$seed&nologo=true&safe=true"
-
-    lastImageUrl = imageUrl
-    imageHistory.add(0, prompt)
-
-    thread {
-        try {
-            val input = URL(imageUrl).openStream()
-            val bitmap = BitmapFactory.decodeStream(input)
-
-            runOnUiThread {
-                imageView.setImageBitmap(bitmap)
-                statusText.text = "Image ready"
-                addChat("Jarvis", "Image generated: $prompt")
-                speak("Image ready")
-            }
-        } catch (e: Exception) {
-            runOnUiThread {
-                statusText.text = "Image error"
-                addChat("Jarvis", "Image generation failed. Opening in browser.")
-                startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(imageUrl)))
-            }
-        }
-    }
-}
-
-private fun downloadLastImage() {
-    thread {
-        try {
-            val input = URL(lastImageUrl).openStream()
-            val picturesDir = getExternalFilesDir(Environment.DIRECTORY_PICTURES)
-
-            val file = File(
-                picturesDir,
-                "jarvis_image_${System.currentTimeMillis()}.png"
-            )
-
-            val output = FileOutputStream(file)
-            input.copyTo(output)
-            output.close()
-            input.close()
-
-            runOnUiThread {
-                statusText.text = "Image downloaded"
-                addChat("Jarvis", "Saved image: ${file.absolutePath}")
-                speak("Image downloaded")
-            }
-        } catch (e: Exception) {
-            runOnUiThread {
-                statusText.text = "Download failed"
-                speak("Download failed")
-            }
-        }
-    }
-}
-
-private fun playOnSpotube(song: String) {
-    if (song.isBlank()) {
-        speak("Please say the song name")
-        return
-    }
-
-    statusText.text = "Opening Spotube for $song"
-    speak("Opening $song on Spotube")
-
-    val packages = listOf(
-        "oss.krtirtho.spotube",
-        "com.github.krtirtho.spotube",
-        "com.krtirtho.spotube"
-    )
-
-    val spotifySearchUrl =
-        "https://open.spotify.com/search/${Uri.encode(song)}"
-
-    for (pkg in packages) {
-        try {
-            val intent = Intent(Intent.ACTION_VIEW, Uri.parse(spotifySearchUrl))
-            intent.setPackage(pkg)
-            startActivity(intent)
-            return
-        } catch (_: Exception) {
-        }
-    }
-
-    openApp("spotube")
-}
-
-private fun playOnRiMusic(song: String) {
-    if (song.isBlank()) {
-        speak("Please say the song name")
-        return
-    }
-
-    statusText.text = "Opening RiMusic for $song"
-    speak("Opening $song on RiMusic")
-
-    val packages = listOf(
-        "it.fast4x.rimusic",
-        "com.fast4x.rimusic",
-        "com.rimusic",
-        "fast4x.rimusic"
-    )
-
-    val ytMusicUrl =
-        "https://music.youtube.com/search?q=${Uri.encode(song)}"
-
-    for (pkg in packages) {
-        try {
-            val intent = Intent(Intent.ACTION_VIEW, Uri.parse(ytMusicUrl))
-            intent.setPackage(pkg)
-            startActivity(intent)
-            return
-        } catch (_: Exception) {
-        }
-    }
-
-    openApp("rimusic")
-}
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
 
@@ -549,28 +422,70 @@ private fun playOnRiMusic(song: String) {
         val normalized = normalizeCommand(command)
 
         when {
-            // Image generation command FIRST
-normalized.contains("image") ||
-normalized.contains("photo") ||
-normalized.contains("wallpaper") ||
-normalized.contains("picture") ||
-normalized.contains("banao") ||
-normalized.contains("bnado") ||
-normalized.contains("generate") -> {
-    val prompt = normalized
-        .replace("generate", "")
-        .replace("image", "")
-        .replace("photo", "")
-        .replace("wallpaper", "")
-        .replace("picture", "")
-        .replace("banao", "")
-        .replace("bnado", "")
-        .replace("of", "")
-        .trim()
+            normalized.contains("image") ||
+            normalized.contains("photo") ||
+            normalized.contains("wallpaper") ||
+            normalized.contains("picture") ||
+            normalized.contains("banao") ||
+            normalized.contains("bnado") ||
+            normalized.contains("generate") -> {
+                val prompt = normalized
+                    .replace("generate", "")
+                    .replace("image", "")
+                    .replace("photo", "")
+                    .replace("wallpaper", "")
+                    .replace("picture", "")
+                    .replace("banao", "")
+                    .replace("bnado", "")
+                    .replace("of", "")
+                    .trim()
 
-    generateAIImage(prompt)
-    return
-}
+                generateAIImage(prompt)
+                return
+            }
+
+            normalized.contains("spotify") ||
+            normalized.contains("spotube") -> {
+                val q = normalized
+                    .replace("spotify", "")
+                    .replace("spotube", "")
+                    .replace("play", "")
+                    .replace("chalao", "")
+                    .replace("gana", "")
+                    .replace("song", "")
+                    .replace("music", "")
+                    .replace("pe", "")
+                    .replace("par", "")
+                    .replace("on", "")
+                    .trim()
+
+                playOnSpotubeAuto(q)
+                return
+            }
+
+            normalized.contains("rimusic") ||
+            normalized.contains("ri music") ||
+            normalized.contains("yt music") ||
+            normalized.contains("youtube music") -> {
+                val q = normalized
+                    .replace("rimusic", "")
+                    .replace("ri music", "")
+                    .replace("yt music", "")
+                    .replace("youtube music", "")
+                    .replace("play", "")
+                    .replace("chalao", "")
+                    .replace("gana", "")
+                    .replace("song", "")
+                    .replace("music", "")
+                    .replace("pe", "")
+                    .replace("par", "")
+                    .replace("on", "")
+                    .trim()
+
+                playOnRiMusicAuto(q)
+                return
+            }
+
             normalized.startsWith("open ") -> {
                 val app = normalized.replace("open", "").trim()
                 openApp(app)
@@ -586,52 +501,15 @@ normalized.contains("generate") -> {
                     .replace("karo", "")
                     .replace("kar", "")
                     .trim()
+
                 openWebSearch(q)
                 return
             }
-            normalized.contains("spotube") -> {
-    val q = normalized
-        .replace("spotube", "")
-        .replace("play", "")
-        .replace("chalao", "")
-        .replace("gana", "")
-        .replace("song", "")
-        .replace("music", "")
-        .replace("pe", "")
-        .replace("par", "")
-        .trim()
-
-    playOnSpotube(q)
-    return
-}
-
-normalized.contains("rimusic") ||
-normalized.contains("ri music") ||
-normalized.contains("yt music") ||
-normalized.contains("youtube music") -> {
-    val q = normalized
-        .replace("rimusic", "")
-        .replace("ri music", "")
-        .replace("yt music", "")
-        .replace("youtube music", "")
-        .replace("play", "")
-        .replace("chalao", "")
-        .replace("gana", "")
-        .replace("song", "")
-        .replace("music", "")
-        .replace("pe", "")
-        .replace("par", "")
-        .trim()
-
-    playOnRiMusic(q)
-    return
-}
-            
 
             normalized.contains("youtube") ||
+            normalized.contains("play") ||
             normalized.contains("chalao") ||
             normalized.contains("gana") ||
-            normalized.contains("play") ||
             normalized.contains("song") ||
             normalized.contains("music") -> {
                 val q = normalized
@@ -643,7 +521,9 @@ normalized.contains("youtube music") -> {
                     .replace("gana", "")
                     .replace("song", "")
                     .replace("music", "")
+                    .replace("on", "")
                     .trim()
+
                 playOnYouTube(q)
                 return
             }
@@ -672,6 +552,7 @@ normalized.contains("youtube music") -> {
                     .replace("message", "")
                     .replace("sms", "")
                     .trim()
+
                 openSms(text)
                 return
             }
@@ -682,6 +563,7 @@ normalized.contains("youtube music") -> {
                     .replace("whatsapp message", "")
                     .replace("whatsapp", "")
                     .trim()
+
                 openWhatsApp(text)
                 return
             }
@@ -700,6 +582,7 @@ normalized.contains("youtube music") -> {
                     .replace("route", "")
                     .replace("location", "")
                     .trim()
+
                 openMaps(q)
                 return
             }
@@ -758,6 +641,143 @@ normalized.contains("youtube music") -> {
         }
 
         askAIChat(normalized)
+    }
+
+    private fun playOnSpotubeAuto(song: String) {
+        if (song.isBlank()) {
+            speak("Please say the song name")
+            return
+        }
+
+        val service = JarvisAccessibilityService.instance
+
+        if (service == null) {
+            speak("Please enable Jarvis accessibility service")
+            openApp("spotube")
+            return
+        }
+
+        speak("Playing $song on Spotube")
+        openApp("spotube")
+
+        Handler(Looper.getMainLooper()).postDelayed({
+            service.tapPercent(0.50f, 0.93f)
+        }, 1200)
+
+        Handler(Looper.getMainLooper()).postDelayed({
+            service.tapPercent(0.50f, 0.12f)
+        }, 2200)
+
+        Handler(Looper.getMainLooper()).postDelayed({
+            service.typeText(song)
+        }, 3000)
+
+        Handler(Looper.getMainLooper()).postDelayed({
+            service.tapPercent(0.50f, 0.28f)
+        }, 4500)
+    }
+
+    private fun playOnRiMusicAuto(song: String) {
+        if (song.isBlank()) {
+            speak("Please say the song name")
+            return
+        }
+
+        val service = JarvisAccessibilityService.instance
+        if (service == null) {
+            speak("Please enable Jarvis accessibility service")
+            openApp("rimusic")
+            return
+        }
+
+        speak("Playing $song on RiMusic")
+        openApp("rimusic")
+
+        Handler(Looper.getMainLooper()).postDelayed({
+            service.tapPercent(0.85f, 0.08f)
+        }, 1200)
+
+        Handler(Looper.getMainLooper()).postDelayed({
+            service.tapPercent(0.50f, 0.12f)
+        }, 2200)
+
+        Handler(Looper.getMainLooper()).postDelayed({
+            service.typeText(song)
+        }, 3000)
+
+        Handler(Looper.getMainLooper()).postDelayed({
+            service.tapPercent(0.50f, 0.30f)
+        }, 4500)
+    }
+
+    private fun generateAIImage(prompt: String) {
+        if (prompt.isBlank()) {
+            speak("Please say image prompt")
+            return
+        }
+
+        statusText.text = "Generating image..."
+        imagePromptText.text = "Prompt: $prompt"
+        speak("Generating image")
+
+        val cleanPrompt = "$prompt, ultra detailed, cinematic, high quality"
+        val seed = System.currentTimeMillis() % 100000
+
+        val imageUrl =
+            "https://image.pollinations.ai/prompt/${Uri.encode(cleanPrompt)}?width=768&height=768&seed=$seed&nologo=true&safe=true"
+
+        lastImageUrl = imageUrl
+        imageHistory.add(0, prompt)
+
+        thread {
+            try {
+                val input = URL(imageUrl).openStream()
+                val bitmap = BitmapFactory.decodeStream(input)
+
+                runOnUiThread {
+                    imageView.setImageBitmap(bitmap)
+                    statusText.text = "Image ready"
+                    addChat("Jarvis", "Image generated: $prompt")
+                    speak("Image ready")
+                }
+            } catch (e: Exception) {
+                runOnUiThread {
+                    statusText.text = "Image error"
+                    addChat("Jarvis", "Image generation failed. Opening in browser.")
+                    startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(imageUrl)))
+                }
+            }
+        }
+    }
+
+    private fun downloadLastImage() {
+        thread {
+            try {
+                val input = URL(lastImageUrl).openStream()
+                val picturesDir = getExternalFilesDir(Environment.DIRECTORY_PICTURES)
+
+                val file = File(
+                    picturesDir,
+                    "jarvis_image_${System.currentTimeMillis()}.png"
+                )
+
+                val output = FileOutputStream(file)
+                input.copyTo(output)
+                output.close()
+                input.close()
+
+                runOnUiThread {
+                    statusText.text = "Image downloaded"
+                    addChat("Jarvis", "Saved image: ${file.absolutePath}")
+                    speak("Image downloaded")
+                }
+            } catch (e: Exception) {
+                runOnUiThread {
+                    statusText.text = "Download failed"
+                    speak("Download failed")
+                }
+            }
+        }
     }
 
     private fun normalizeCommand(command: String): String {
@@ -1097,21 +1117,7 @@ normalized.contains("youtube music") -> {
     }
 
     private fun playOnSpotify(song: String) {
-        if (song.isBlank()) {
-            speak("Please say the song name")
-            return
-        }
-
-        val url = "spotify:search:${Uri.encode(song)}"
-        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
-        intent.setPackage("com.spotify.music")
-
-        try {
-            startActivity(intent)
-        } catch (e: Exception) {
-            val webUrl = "https://open.spotify.com/search/${Uri.encode(song)}"
-            startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(webUrl)))
-        }
+        playOnSpotubeAuto(song)
     }
 
     override fun onInit(status: Int) {
