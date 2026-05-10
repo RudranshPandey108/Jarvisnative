@@ -1,20 +1,27 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
-<uses-permission android:name="android.permission.RECORD_AUDIO" />
-<uses-permission android:name="android.permission.INTERNET" />
-<uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
-<uses-permission android:name="android.permission.FOREGROUND_SERVICE_MICROPHONE" />
-<uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MICROPHONE" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="CALL_PHONE" />
 
     <queries>
         <intent>
-    <action android:name="android.intent.action.MAIN" />
-    <category android:name="android.intent.category.LAUNCHER" />
-</intent>
+            <action android:name="android.intent.action.MAIN" />
+            <category android:name="android.intent.category.LAUNCHER" />
+        </intent>
+
         <package android:name="oss.krtirtho.spotube" />
-<package android:name="it.fast4x.rimusic" />
-<package android:name="com.fast4x.rimusic" />
-<package android:name="com.rimusic" />
+        <package android:name="com.github.krtirtho.spotube" />
+        <package android:name="com.krtirtho.spotube" />
+
+        <package android:name="it.fast4x.rimusic" />
+        <package android:name="com.fast4x.rimusic" />
+        <package android:name="com.rimusic" />
+        <package android:name="fast4x.rimusic" />
+
         <package android:name="com.google.android.youtube" />
         <package android:name="com.spotify.music" />
         <package android:name="com.google.android.apps.youtube.music" />
@@ -26,73 +33,71 @@
     </queries>
 
     <application
-        
-        
         android:theme="@style/AppTheme"
         android:label="JARVIS"
         android:icon="@mipmap/ic_launcher"
-
         android:allowBackup="true"
         android:supportsRtl="true">
+
         <service
-    android:name=".JarvisVoiceInteractionService"
-    android:permission="android.permission.BIND_VOICE_INTERACTION"
-    android:exported="true">
+            android:name=".JarvisVoiceInteractionService"
+            android:permission="android.permission.BIND_VOICE_INTERACTION"
+            android:exported="true">
 
-    <intent-filter>
-        <action android:name="android.service.voice.VoiceInteractionService" />
-    </intent-filter>
+            <intent-filter>
+                <action android:name="android.service.voice.VoiceInteractionService" />
+            </intent-filter>
 
-    <meta-data
-        android:name="android.voice_interaction"
-        android:resource="@xml/jarvis_voice_interaction" />
-</service>
+            <meta-data
+                android:name="android.voice_interaction"
+                android:resource="@xml/jarvis_voice_interaction" />
+        </service>
 
-<service
-    android:name=".JarvisVoiceSessionService"
-    android:permission="android.permission.BIND_VOICE_INTERACTION"
-    android:exported="true" />
         <service
-    android:name=".JarvisAccessibilityService"
-    android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE"
-    android:exported="true">
+            android:name=".JarvisVoiceSessionService"
+            android:permission="android.permission.BIND_VOICE_INTERACTION"
+            android:exported="true" />
 
-    <intent-filter>
-        <action android:name="android.accessibilityservice.AccessibilityService" />
-    </intent-filter>
-
-    <meta-data
-        android:name="android.accessibilityservice"
-        android:resource="@xml/jarvis_accessibility_config" />
-</service>
         <service
-    android:name=".JarvisService"
-    android:enabled="true"
-    android:exported="false"
-    android:foregroundServiceType="microphone" />
-        
+            android:name=".JarvisAccessibilityService"
+            android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE"
+            android:exported="true">
 
- <activity
-    android:name=".MainActivity"
-    android:exported="true"
-     android:launchMode="singleTop">
+            <intent-filter>
+                <action android:name="android.accessibilityservice.AccessibilityService" />
+            </intent-filter>
 
-    <intent-filter>
-        <action android:name="android.intent.action.MAIN" />
-        <category android:name="android.intent.category.LAUNCHER" />
-    </intent-filter>
+            <meta-data
+                android:name="android.accessibilityservice"
+                android:resource="@xml/jarvis_accessibility_config" />
+        </service>
 
-    <intent-filter>
-        <action android:name="android.intent.action.ASSIST" />
-        <category android:name="android.intent.category.DEFAULT" />
-    </intent-filter>
+        <service
+            android:name=".JarvisService"
+            android:enabled="true"
+            android:exported="false" />
 
-    <intent-filter>
-        <action android:name="android.intent.action.VOICE_COMMAND" />
-        <category android:name="android.intent.category.DEFAULT" />
-    </intent-filter>
+        <activity
+            android:name=".MainActivity"
+            android:exported="true"
+            android:launchMode="singleTop">
 
-</activity>
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+
+            <intent-filter>
+                <action android:name="android.intent.action.ASSIST" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+
+            <intent-filter>
+                <action android:name="android.intent.action.VOICE_COMMAND" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+
+        </activity>
 
     </application>
 
