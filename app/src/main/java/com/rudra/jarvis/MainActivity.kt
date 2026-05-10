@@ -444,47 +444,22 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
                 return
             }
 
-            normalized.contains("spotify") ||
-            normalized.contains("spotube") -> {
-                val q = normalized
-                    .replace("spotify", "")
-                    .replace("spotube", "")
-                    .replace("play", "")
-                    .replace("chalao", "")
-                    .replace("gana", "")
-                    .replace("song", "")
-                    .replace("music", "")
-                    .replace("pe", "")
-                    .replace("par", "")
-                    .replace("on", "")
-                    .trim()
+            normalized.contains("spotify") -> {
+    val q = normalized
+        .replace("spotify", "")
+        .replace("play", "")
+        .replace("chalao", "")
+        .replace("gana", "")
+        .replace("song", "")
+        .replace("music", "")
+        .replace("pe", "")
+        .replace("par", "")
+        .replace("on", "")
+        .trim()
 
-                playOnSpotubeAuto(q)
-                return
-            }
-
-            normalized.contains("rimusic") ||
-            normalized.contains("ri music") ||
-            normalized.contains("yt music") ||
-            normalized.contains("youtube music") -> {
-                val q = normalized
-                    .replace("rimusic", "")
-                    .replace("ri music", "")
-                    .replace("yt music", "")
-                    .replace("youtube music", "")
-                    .replace("play", "")
-                    .replace("chalao", "")
-                    .replace("gana", "")
-                    .replace("song", "")
-                    .replace("music", "")
-                    .replace("pe", "")
-                    .replace("par", "")
-                    .replace("on", "")
-                    .trim()
-
-                playOnRiMusicAuto(q)
-                return
-            }
+    playOnSpotifyAuto(q)
+    return
+}
 
             normalized.startsWith("open ") -> {
                 val app = normalized.replace("open", "").trim()
@@ -643,78 +618,51 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
         askAIChat(normalized)
     }
 
-    private fun playOnSpotubeAuto(song: String) {
-        if (song.isBlank()) {
-            speak("Please say the song name")
-            return
-        }
 
-        val service = JarvisAccessibilityService.instance
-
-        if (service == null) {
-            speak("Please enable Jarvis accessibility service")
-            openApp("spotube")
-            return
-        }
-
-        speak("Playing $song on Spotube")
-        openApp("spotube")
-
-        Handler(Looper.getMainLooper()).postDelayed({
-            service.tapPercent(0.50f, 0.93f)
-        }, 1200)
-
-        Handler(Looper.getMainLooper()).postDelayed({
-            service.tapPercent(0.50f, 0.12f)
-        }, 2200)
-
-        Handler(Looper.getMainLooper()).postDelayed({
-            service.typeText(song)
-        }, 3000)
-
-        Handler(Looper.getMainLooper()).postDelayed({
-            service.tapPercent(0.50f, 0.28f)
-        }, 4500)
+    private fun playOnSpotifyAuto(song: String) {
+    if (song.isBlank()) {
+        speak("Please say the song name")
+        return
     }
 
-    private fun playOnRiMusicAuto(song: String) {
-        if (song.isBlank()) {
-            speak("Please say the song name")
+    val service = JarvisAccessibilityService.instance
+
+    if (service == null) {
+        speak("Please enable Jarvis accessibility service")
+        openApp("spotify")
+        return
+    }
+
+    speak("Playing $song on Spotify")
+
+    try {
+        val intent = packageManager.getLaunchIntentForPackage("com.spotify.music")
+        if (intent == null) {
+            speak("Spotify not installed")
             return
         }
+        startActivity(intent)
+    } catch (e: Exception) {
+        speak("Spotify not installed")
+        return
+    }
 
-        val service = JarvisAccessibilityService.instance
-        if (service == null) {
-            speak("Please enable Jarvis accessibility service")
-            
-            return
-        }
+    Handler(Looper.getMainLooper()).postDelayed({
+        service.tapPercent(0.50f, 0.93f) // bottom Search tab
+    }, 1400)
 
-        speak("Playing $song on RiMusic")
-        try {
-    val intent = packageManager.getLaunchIntentForPackage("it.fast4x.rimusic")
-    startActivity(intent)
-} catch (e: Exception) {
-    speak("RiMusic not installed")
-    return
+    Handler(Looper.getMainLooper()).postDelayed({
+        service.tapPercent(0.50f, 0.10f) // top search bar
+    }, 2600)
+
+    Handler(Looper.getMainLooper()).postDelayed({
+        service.typeText(song)
+    }, 3600)
+
+    Handler(Looper.getMainLooper()).postDelayed({
+        service.tapPercent(0.50f, 0.33f) // first song result
+    }, 5600)
 }
-
-        Handler(Looper.getMainLooper()).postDelayed({
-            service.tapPercent(0.85f, 0.08f)
-        }, 1200)
-
-        Handler(Looper.getMainLooper()).postDelayed({
-            service.tapPercent(0.50f, 0.12f)
-        }, 2200)
-
-        Handler(Looper.getMainLooper()).postDelayed({
-            service.typeText(song)
-        }, 3000)
-
-        Handler(Looper.getMainLooper()).postDelayed({
-            service.tapPercent(0.50f, 0.30f)
-        }, 4500)
-    }
 
     private fun generateAIImage(prompt: String) {
         if (prompt.isBlank()) {
