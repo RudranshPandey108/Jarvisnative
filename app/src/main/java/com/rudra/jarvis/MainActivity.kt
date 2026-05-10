@@ -351,28 +351,60 @@ layout.addView(continuousButton)
     thread {
         try {
             val prompt = """
-                You are Jarvis, an Android assistant.
-                Convert the user's command into ONLY valid JSON.
-                
-                Possible actions:
-                1. youtube
-                2. spotify
-                3. open_app
-                4. selfie
-                5. chat
-                
-                Rules:
-                - If user wants to play song/music/video, use youtube unless Spotify is mentioned.
-                - If user wants to open app, use open_app.
-                - If user wants selfie/photo, use selfie.
-                - If normal talk, use chat.
-                - Return ONLY JSON. No markdown.
-                
-                JSON format:
-                {"action":"youtube","query":"song name","reply":"Playing song"}
-                
-                User command: $command
-            """.trimIndent()
+You are Jarvis, a smart Android assistant.
+
+Convert the user's command into ONLY valid JSON.
+
+Available actions:
+
+1. open_app
+Use when user wants to open any installed app.
+Example: open whatsapp, camera kholo, open physics wallah
+
+2. web_search
+Use when user wants to search anything on Google/browser.
+Example: google pe motu patlu search karo, search weather in lucknow
+
+3. open_url
+Use when user wants to open a website.
+Example: open google.com, open youtube.com
+
+4. youtube
+Use when user wants to play/search a song/video on YouTube.
+Example: kesariya chalao, play arijit singh sad song
+
+5. spotify
+Use only when Spotify is clearly mentioned.
+Example: play perfect on spotify
+
+6. maps
+Use when user asks for location, route, navigation, nearby places.
+Example: maps pe Lucknow railway station dikhao
+
+7. selfie
+Use when user wants selfie/photo.
+Example: selfie le lo, take selfie
+
+8. camera
+Use when user wants to open camera.
+Example: camera kholo
+
+9. chat
+Use for normal conversation.
+
+Rules:
+- Return ONLY JSON.
+- No markdown.
+- No explanation.
+- If it is a normal conversation, use chat.
+- For Hinglish/Hindi, understand meaning naturally.
+- Keep query short and useful.
+
+JSON format:
+{"action":"youtube","query":"Arijit Singh sad song","reply":"Playing Arijit Singh sad song on YouTube"}
+
+User command: $command
+""".trimIndent()
 
             val requestJson = JSONObject()
             val contents = org.json.JSONArray()
@@ -416,17 +448,28 @@ layout.addView(continuousButton)
                 .replace("```", "")
                 .trim()
 
-            val actionJson = JSONObject(text)
+            try {
+    val actionJson = JSONObject(text)
 
-            runOnUiThread {
-                runGeminiAction(actionJson)
-            }
+    runOnUiThread {
+        runGeminiAction(actionJson)
+    }
+
+} catch (e: Exception) {
+
+    runOnUiThread {
+        statusText.text = "Jarvis replied"
+        addChat("Jarvis", text)
+        speak(text)
+    }
+}
 
         } catch (e: Exception) {
-            runOnUiThread {
-                statusText.text = "Gemini error"
-                speak("Sorry, Gemini se response nahi aaya")
-            }
+    runOnUiThread {
+        statusText.text = "Gemini error: ${e.message}"
+        addChat("Jarvis", "Gemini error: ${e.message}")
+        speak("Sorry, Gemini se response nahi aaya")
+    }
         }
     }
     }
@@ -437,8 +480,9 @@ layout.addView(continuousButton)
     val reply = json.optString("reply", "")
 
     if (reply.isNotBlank()) {
-    addChat("Jarvis", reply)
-}
+        addChat("Jarvis", reply)
+        speak(reply)
+    }
 
     when (action) {
 
@@ -454,18 +498,58 @@ layout.addView(continuousButton)
             openApp(query)
         }
 
+        "web_search" -> {
+            val url = "https://www.google.com/search?q=${Uri.encode(query)}"
+            val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
+            startActivity(intent)
+        }
+
+        "open_url" -> {
+            var url = query.trim()
+
+            if (!url.startsWith("http://") && !url.startsWith("https://")) {
+                url = "https://$url"
+            }
+
+            val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
+            startActivity(intent)
+        }
+
+        "maps" -> {
+            val uri = Uri.parse("geo:0,0?q=${Uri.encode(query)}")
+            val intent = Intent(Intent.ACTION_VIEW, uri)
+            intent.setPackage("com.google.android.apps.maps")
+
+            try {
+                startActivity(intent)
+            } catch (e: Exception) {
+                startActivity(Intent(Intent.ACTION_VIEW, uri))
+            }
+        }
+
+        "camera" -> {
+            openApp("camera")
+        }
+
         "selfie" -> {
             openCameraSelfie()
         }
 
         "chat" -> {
-            statusText.text = reply.ifBlank { "Jarvis ready" }
-            speak(reply.ifBlank { "I am ready" })
+            val message = reply.ifBlank { "I am here, sir." }
+            statusText.text = "Jarvis replied"
+
+            if (reply.isBlank()) {
+                addChat("Jarvis", message)
+                speak(message)
+            }
         }
 
         else -> {
+            val fallback = reply.ifBlank { "I did not understand that action." }
             statusText.text = "Unknown action"
-            speak("I did not understand the action")
+            addChat("Jarvis", fallback)
+            speak(fallback)
         }
     }
     }
