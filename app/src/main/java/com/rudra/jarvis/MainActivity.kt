@@ -381,6 +381,47 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
 // LOCK SCREEN + VOICE PASSWORD + MAIN UI FIX
 // =========================
 
+
+private fun roundedBg(color: Int, strokeColor: Int, radius: Float): GradientDrawable {
+    val bg = GradientDrawable()
+    bg.cornerRadius = radius
+    bg.setColor(color)
+    bg.setStroke(3, strokeColor)
+    return bg
+}
+
+private fun checkMicPermissionAndListen() {
+    if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO)
+        != PackageManager.PERMISSION_GRANTED
+    ) {
+        ActivityCompat.requestPermissions(
+            this,
+            arrayOf(Manifest.permission.RECORD_AUDIO),
+            micPermissionCode
+        )
+    } else {
+        startVoiceInput()
+    }
+}
+
+private fun startVoiceInput() {
+    statusText.text = "Listening..."
+
+    val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH)
+    intent.putExtra(
+        RecognizerIntent.EXTRA_LANGUAGE_MODEL,
+        RecognizerIntent.LANGUAGE_MODEL_FREE_FORM
+    )
+    intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, "en-IN")
+    intent.putExtra(RecognizerIntent.EXTRA_PROMPT, "Speak your command")
+
+    try {
+        startActivityForResult(intent, speechRequestCode)
+    } catch (e: ActivityNotFoundException) {
+        statusText.text = "Speech recognition not available"
+        speak("Speech recognition is not available")
+    }
+}
 private fun startVoicePassword() {
 
     isUnlocked = false
