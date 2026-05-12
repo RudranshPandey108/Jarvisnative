@@ -34,6 +34,12 @@ import java.util.Locale
 import kotlin.concurrent.thread
 
 class MainActivity : Activity(), TextToSpeech.OnInitListener {
+    private var isUnlocked = false
+private val unlockRequestCode = 777
+
+private lateinit var lockScreenLayout: LinearLayout
+private lateinit var lockStatusText: TextView
+private lateinit var lockOrb: TextView
 
     private val YOUTUBE_API_KEY = "AIzaSyAE7-4GLJQNAk5vxhPBCrRxB4pa85eg6gE"
 
@@ -64,6 +70,51 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
         prefs = getSharedPreferences("jarvis_prefs", MODE_PRIVATE)
 
         val layout = LinearLayout(this)
+        // ================= LOCK SCREEN =================
+
+lockScreenLayout = LinearLayout(this)
+lockScreenLayout.orientation = LinearLayout.VERTICAL
+lockScreenLayout.gravity = Gravity.CENTER
+lockScreenLayout.setBackgroundColor(Color.BLACK)
+lockScreenLayout.layoutParams = LinearLayout.LayoutParams(
+    LinearLayout.LayoutParams.MATCH_PARENT,
+    LinearLayout.LayoutParams.MATCH_PARENT
+)
+
+val lockTitle = TextView(this)
+lockTitle.text = "JARVIS SECURITY"
+lockTitle.textSize = 34f
+lockTitle.setTextColor(Color.CYAN)
+lockTitle.gravity = Gravity.CENTER
+lockTitle.setPadding(0, 0, 0, 40)
+
+lockOrb = TextView(this)
+lockOrb.text = "⬤"
+lockOrb.textSize = 120f
+lockOrb.setTextColor(Color.RED)
+lockOrb.gravity = Gravity.CENTER
+lockOrb.setShadowLayer(50f, 0f, 0f, Color.RED)
+
+lockStatusText = TextView(this)
+lockStatusText.text = "VOICE ID REQUIRED"
+lockStatusText.textSize = 22f
+lockStatusText.setTextColor(Color.WHITE)
+lockStatusText.gravity = Gravity.CENTER
+lockStatusText.setPadding(0, 40, 0, 20)
+
+val lockHint = TextView(this)
+lockHint.text =
+    "Authorized user only\n\nSay your name to unlock"
+lockHint.textSize = 16f
+lockHint.setTextColor(Color.LTGRAY)
+lockHint.gravity = Gravity.CENTER
+
+lockScreenLayout.addView(lockTitle)
+lockScreenLayout.addView(lockOrb)
+lockScreenLayout.addView(lockStatusText)
+lockScreenLayout.addView(lockHint)
+
+// ================================================
         layout.orientation = LinearLayout.VERTICAL
         layout.gravity = Gravity.CENTER
         layout.setPadding(45, 45, 45, 45)
@@ -302,7 +353,7 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
 
         val scrollView = ScrollView(this)
         scrollView.addView(layout)
-        setContentView(scrollView)
+        setContentView(lockScreenLayout)
 
         val launchedAsAssistant =
             intent.action == Intent.ACTION_ASSIST ||
@@ -317,8 +368,61 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
         } else {
             speak("Jarvis online")
         }
+        startVoicePassword()
     }
 
+    private fun showMainJarvisUI() {
+
+    val root = ScrollView(this)
+
+    val currentLayout = findViewById<LinearLayout>(android.R.id.content)
+
+    root.addView(window.decorView.rootView)
+
+    setContentView(root)
+    }
+
+    private fun startVoicePassword() {
+
+    isUnlocked = false
+
+    lockOrb.setTextColor(Color.RED)
+    lockOrb.setShadowLayer(50f, 0f, 0f, Color.RED)
+
+    lockStatusText.text = "VOICE ID REQUIRED"
+
+    speak("Apna naam batiye")
+
+    Handler(Looper.getMainLooper()).postDelayed({
+        startUnlockVoiceInput()
+    }, 1500)
+    }
+
+    private fun startUnlockVoiceInput() {
+
+    val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH)
+
+    intent.putExtra(
+        RecognizerIntent.EXTRA_LANGUAGE_MODEL,
+        RecognizerIntent.LANGUAGE_MODEL_FREE_FORM
+    )
+
+    intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, "en-IN")
+
+    intent.putExtra(
+        RecognizerIntent.EXTRA_PROMPT,
+        "Say your name"
+    )
+
+    try {
+        startActivityForResult(intent, unlockRequestCode)
+    } catch (e: Exception) {
+
+        lockStatusText.text = "VOICE ENGINE FAILED"
+
+        speak("Voice recognition failed")
+    }
+    }
     override fun onNewIntent(intent: Intent?) {
         super.onNewIntent(intent)
         setIntent(intent)
@@ -378,6 +482,56 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        if (requestCode == unlockRequestCode && resultCode == RESULT_OK) {
+
+    val result =
+        data?.getStringArrayListExtra(
+            RecognizerIntent.EXTRA_RESULTS
+        )
+
+    val spoken =
+        result?.get(0)?.lowercase(Locale.getDefault()) ?: ""
+
+    if (
+        spoken.contains("rudransh") ||
+        spoken.contains("rudra")
+    ) {
+
+        isUnlocked = true
+
+        lockOrb.setTextColor(Color.GREEN)
+        lockOrb.setShadowLayer(60f, 0f, 0f, Color.GREEN)
+
+        lockStatusText.text = "ACCESS GRANTED"
+
+        speak("Welcome boss. Swaagat hai.")
+
+        Handler(Looper.getMainLooper()).postDelayed({
+
+            recreate()
+
+        }, 1800)
+
+    } else {
+
+        isUnlocked = false
+
+        lockOrb.setTextColor(Color.RED)
+        lockOrb.setShadowLayer(60f, 0f, 0f, Color.RED)
+
+        lockStatusText.text = "ACCESS DENIED"
+
+        speak("You are not boss. Please stay away.")
+
+        Handler(Looper.getMainLooper()).postDelayed({
+
+            startVoicePassword()
+
+        }, 2500)
+    }
+
+    return
+        }
         super.onActivityResult(requestCode, resultCode, data)
 
         if (requestCode == speechRequestCode && resultCode == RESULT_OK) {
