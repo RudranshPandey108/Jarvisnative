@@ -35,7 +35,7 @@ import kotlin.concurrent.thread
 
 class MainActivity : Activity(), TextToSpeech.OnInitListener {
 
-    private val YOUTUBE_API_KEY = "PASTE_YOUR_YOUTUBE_API_KEY_HERE"
+    private val YOUTUBE_API_KEY = "AIzaSyAE7-4GLJQNAk5vxhPBCrRxB4pa85eg6gE"
 
     private var isUnlocked = false
     private val unlockRequestCode = 777
